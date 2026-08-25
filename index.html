@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="ur">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Real Estate Chatbot</title>
+<style>
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body {
+    font-family: 'Segoe UI', Tahoma, sans-serif;
+    background: linear-gradient(135deg, #0f2027, #203a43, #2c5364);
+    height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .chat-container {
+    width: 100%;
+    max-width: 420px;
+    height: 600px;
+    background: #fff;
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+  .chat-header {
+    background: #1a3c5e;
+    color: #fff;
+    padding: 16px 20px;
+    font-size: 18px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .chat-header span.dot {
+    width: 10px;
+    height: 10px;
+    background: #4caf50;
+    border-radius: 50%;
+    display: inline-block;
+  }
+  .chat-messages {
+    flex: 1;
+    padding: 16px;
+    overflow-y: auto;
+    background: #f4f6f8;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+  }
+  .msg {
+    max-width: 80%;
+    padding: 10px 14px;
+    border-radius: 14px;
+    font-size: 14px;
+    line-height: 1.4;
+    white-space: pre-wrap;
+  }
+  .msg.bot {
+    background: #e3e9ef;
+    color: #1a1a1a;
+    align-self: flex-start;
+    border-bottom-left-radius: 4px;
+  }
+  .msg.user {
+    background: #1a3c5e;
+    color: #fff;
+    align-self: flex-end;
+    border-bottom-right-radius: 4px;
+  }
+  .typing {
+    align-self: flex-start;
+    color: #888;
+    font-size: 13px;
+    font-style: italic;
+    padding: 4px 10px;
+  }
+  .chat-input {
+    display: flex;
+    border-top: 1px solid #e0e0e0;
+    padding: 10px;
+    gap: 8px;
+    background: #fff;
+  }
+  .chat-input input {
+    flex: 1;
+    border: 1px solid #ccc;
+    border-radius: 20px;
+    padding: 10px 16px;
+    font-size: 14px;
+    outline: none;
+  }
+  .chat-input input:focus {
+    border-color: #1a3c5e;
+  }
+  .chat-input button {
+    background: #1a3c5e;
+    color: #fff;
+    border: none;
+    border-radius: 20px;
+    padding: 10px 20px;
+    font-size: 14px;
+    cursor: pointer;
+    transition: background 0.2s;
+  }
+  .chat-input button:hover {
+    background: #14314d;
+  }
+  .chat-input button:disabled {
+    background: #999;
+    cursor: not-allowed;
+  }
+</style>
+</head>
+<body>
+
+<div class="chat-container">
+  <div class="chat-header">
+    <span class="dot"></span>
+    Real Estate Assistant
+  </div>
+  <div class="chat-messages" id="chatMessages">
+    <div class="msg bot">Assalam-o-Alaikum! Mein aapki real estate se related sawalat mein madad kar sakta hoon. Kis property ya area ke baare mein janna chahtay hain?</div>
+  </div>
+  <div class="chat-input">
+    <input type="text" id="userInput" placeholder="Apna sawal likhein..." autocomplete="off">
+    <button id="sendBtn" onclick="sendMessage()">Send</button>
+  </div>
+</div>
+
+<script>
+  // 🔴 IMPORTANT: Apna n8n webhook URL yahan paste karein
+  const WEBHOOK_URL = "https://your-n8n-instance.com/webhook/your-webhook-id";
+
+  const chatMessages = document.getElementById('chatMessages');
+  const userInput = document.getElementById('userInput');
+  const sendBtn = document.getElementById('sendBtn');
+
+  // Simple session id so n8n can track conversation per user (optional)
+  const sessionId = 'session_' + Math.random().toString(36).substring(2, 15);
+
+  function addMessage(text, sender) {
+    const msg = document.createElement('div');
+    msg.className = 'msg ' + sender;
+    msg.textContent = text;
+    chatMessages.appendChild(msg);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function showTyping() {
+    const typing = document.createElement('div');
+    typing.className = 'typing';
+    typing.id = 'typingIndicator';
+    typing.textContent = 'Typing...';
+    chatMessages.appendChild(typing);
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+  }
+
+  function removeTyping() {
+    const typing = document.getElementById('typingIndicator');
+    if (typing) typing.remove();
+  }
+
+  async function sendMessage() {
+    const text = userInput.value.trim();
+    if (!text) return;
+
+    addMessage(text, 'user');
+    userInput.value = '';
+    sendBtn.disabled = true;
+    showTyping();
+
+    try {
+      const response = await fetch(WEBHOOK_URL, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: text,
+          sessionId: sessionId
+        })
+      });
+
+      const data = await response.json();
+      removeTyping();
+
+      // n8n Respond node se jo bhi field aaye (reply/output/text) usay handle karein
+      const botReply = data.reply || data.output || data.text || "Maazrat, jawab nahi mil saka. Dobara koshish karein.";
+      addMessage(botReply, 'bot');
+    } catch (error) {
+      removeTyping();
+      addMessage("Connection mein masla hai. Baraye meherbani dobara koshish karein.", 'bot');
+      console.error(error);
+    } finally {
+      sendBtn.disabled = false;
+    }
+  }
+
+  userInput.addEventListener('keypress', function(e) {
+    if (e.key === 'Enter') sendMessage();
+  });
+</script>
+
+</body>
+</html>
