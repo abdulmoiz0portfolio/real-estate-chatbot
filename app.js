@@ -123,7 +123,6 @@ const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const btnSend = document.getElementById("btn-send");
 const btnClearChat = document.getElementById("btn-clear-chat");
-const hotListingsContainer = document.getElementById("hot-listings-container");
 const aiEngineBadge = document.getElementById("ai-engine-badge");
 
 // Modals
@@ -145,56 +144,92 @@ let currentBookingProperty = null;
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
-  renderHotListings();
   initSettings();
   initQuickPrompts();
   
   // Initial Greeting message
   if (state.chatHistory.length === 0) {
-    sendBotMessage(
-      `👋 **Hello & Welcome to EstateBot AI!**\n\nI am your Real Estate AI Assistant connected directly to our live property advisor. Ask me anything about:\n- 🏡 **Available Houses, Luxury Villas & Apartments**\n- 💰 **Pricing, Down Payments & Mortgages**\n- 📅 **Scheduling a Site Tour / Visit**\n- 📈 **High-yield Real Estate Investments**\n\nHow can I help you today?`,
-      PROPERTIES.slice(0, 2)
-    );
+    sendWelcomeMessage();
   }
 });
 
-// Render Hot Listings in Left Sidebar
-function renderHotListings() {
-  if (!hotListingsContainer) return;
-  hotListingsContainer.innerHTML = PROPERTIES.slice(0, 4).map(prop => `
-    <div class="p-2.5 rounded-xl bg-slate-950/70 border border-slate-800/80 hover:border-emerald-500/40 transition-all property-card-glow cursor-pointer" onclick="handleCardClick('${prop.id}')">
-      <div class="flex gap-3">
-        <img src="${prop.image}" alt="${prop.title}" class="w-16 h-16 rounded-lg object-cover flex-shrink-0" />
-        <div class="flex-1 min-w-0">
-          <div class="flex items-center justify-between">
-            <span class="text-[10px] uppercase font-bold tracking-wider px-1.5 py-0.5 rounded ${prop.status === 'rent' ? 'bg-blue-500/20 text-blue-400' : 'bg-emerald-500/20 text-emerald-400'}">
-              For ${prop.status.toUpperCase()}
-            </span>
-            <span class="text-xs font-extrabold text-white">${prop.formattedPrice}</span>
-          </div>
-          <h4 class="text-xs font-semibold text-slate-200 truncate mt-1">${prop.title}</h4>
-          <p class="text-[10px] text-slate-400 truncate flex items-center gap-1 mt-0.5">
-            <i class="fa-solid fa-location-dot text-rose-400 text-[9px]"></i>
-            ${prop.location}
+function sendWelcomeMessage() {
+  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  const msgEl = document.createElement("div");
+  msgEl.className = "flex items-start gap-3 message-animate";
+
+  msgEl.innerHTML = `
+    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white text-sm shrink-0 shadow-md shadow-emerald-500/20">
+      <i class="fa-solid fa-robot"></i>
+    </div>
+    <div class="max-w-[95%] sm:max-w-[85%]">
+      <div class="bg-slate-900/90 border border-slate-800 text-slate-100 p-4 sm:p-5 rounded-2xl rounded-tl-none shadow-xl text-xs sm:text-sm leading-relaxed">
+        <h3 class="text-base font-bold text-white mb-1.5 flex items-center gap-2">
+          <span>👋 Assalam-o-Alaikum & Welcome to EstateBot AI!</span>
+        </h3>
+        <p class="text-slate-300 text-xs sm:text-sm mb-4">
+          I am your 24/7 dedicated Real Estate Assistant. Ask me anything about property discovery, prices, schedules, and investment opportunities.
+        </p>
+
+        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 mb-3">
+          <p class="text-xs font-bold text-emerald-400 mb-2.5 flex items-center gap-1.5">
+            <i class="fa-solid fa-sparkles"></i>
+            Suggested Questions to ask:
           </p>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <button onclick="askSuggestedQuestion('Show me available luxury villas for sale')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-house-chimney text-emerald-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">🏡 Show me luxury villas for sale</span>
+            </button>
+            <button onclick="askSuggestedQuestion('Find apartments for rent under $2,500 / month')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-building text-blue-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">🏢 Rental apartments under $2.5k</span>
+            </button>
+            <button onclick="askSuggestedQuestion('How much down payment do I need for a 500k house?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-calculator text-purple-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">💰 Down payment & mortgage plan</span>
+            </button>
+            <button onclick="askSuggestedQuestion('I want to schedule a property site visit tour')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-regular fa-calendar-check text-amber-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">📅 Schedule a property site tour</span>
+            </button>
+            <button onclick="askSuggestedQuestion('Mujhe commercial plots aur high ROI investment batao')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-rose-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">📈 High ROI commercial plots</span>
+            </button>
+            <button onclick="askSuggestedQuestion('Karachi ya Islamabad ma plots ke rates kya hain?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-map-location-dot text-teal-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">🇵🇰 Islamabad & Karachi rates</span>
+            </button>
+          </div>
         </div>
       </div>
+      <div class="text-[10px] text-slate-500 mt-1">${time}</div>
     </div>
-  `).join("");
+  `;
+
+  chatMessages.appendChild(msgEl);
+  scrollToBottom();
 }
 
 // Quick Prompt Buttons
 function initQuickPrompts() {
   document.querySelectorAll(".quick-prompt").forEach(btn => {
-    btn.addEventListener("click", () => {
+    btn.onclick = () => {
       const prompt = btn.getAttribute("data-prompt");
       if (prompt) {
-        addUserMessage(prompt);
-        processUserQuery(prompt);
+        askSuggestedQuestion(prompt);
       }
-    });
+    };
   });
 }
+
+// Global function to trigger suggested questions
+window.askSuggestedQuestion = function(questionText) {
+  if (!questionText) return;
+  addUserMessage(questionText);
+  processUserQuery(questionText);
+};
 
 // Message Rendering Functions
 function addUserMessage(text) {
@@ -202,8 +237,8 @@ function addUserMessage(text) {
   const msgEl = document.createElement("div");
   msgEl.className = "flex justify-end message-animate";
   msgEl.innerHTML = `
-    <div class="max-w-[85%] sm:max-w-[70%]">
-      <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-none shadow-md text-xs sm:text-sm leading-relaxed">
+    <div class="max-w-[85%] sm:max-w-[75%]">
+      <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-md text-xs sm:text-sm leading-relaxed">
         ${escapeHTML(text)}
       </div>
       <div class="text-[10px] text-slate-500 text-right mt-1">${time}</div>
@@ -217,12 +252,12 @@ function addUserMessage(text) {
 function showTypingIndicator() {
   const typingEl = document.createElement("div");
   typingEl.id = "typing-indicator";
-  typingEl.className = "flex items-start gap-2.5 message-animate";
+  typingEl.className = "flex items-start gap-3 message-animate";
   typingEl.innerHTML = `
-    <div class="w-8 h-8 rounded-full bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 text-xs shrink-0">
+    <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 text-xs shrink-0">
       <i class="fa-solid fa-robot"></i>
     </div>
-    <div class="bg-slate-800/90 border border-slate-700/80 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-md">
+    <div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-md">
       <div class="typing-dot"></div>
       <div class="typing-dot"></div>
       <div class="typing-dot"></div>
@@ -241,7 +276,7 @@ function sendBotMessage(markdownText, attachedProperties = null) {
   hideTypingIndicator();
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement("div");
-  msgEl.className = "flex items-start gap-2.5 message-animate";
+  msgEl.className = "flex items-start gap-3 message-animate";
 
   let formattedContent = formatMarkdown(markdownText);
 
@@ -288,11 +323,11 @@ function sendBotMessage(markdownText, attachedProperties = null) {
   }
 
   msgEl.innerHTML = `
-    <div class="w-8 h-8 rounded-full bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white text-xs shrink-0 shadow-md">
+    <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white text-xs shrink-0 shadow-md shadow-emerald-500/20">
       <i class="fa-solid fa-robot"></i>
     </div>
-    <div class="max-w-[92%] sm:max-w-[80%]">
-      <div class="bg-slate-800/90 border border-slate-700/80 text-slate-100 px-4 py-3 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
+    <div class="max-w-[95%] sm:max-w-[85%]">
+      <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
         ${formattedContent}
         ${cardsHtml}
       </div>
@@ -362,9 +397,8 @@ async function processUserQuery(query) {
       }
     } catch (err) {
       console.warn("n8n Webhook error:", err);
-      // Fallback message with built-in reply
       const fallback = evaluateRealEstateQuery(query);
-      sendBotMessage(`*(Webhook Notice: Live connection timed out, showing local response)*\n\n${fallback.message}`, fallback.properties);
+      sendBotMessage(`*(Webhook Notice: Response timed out, showing local response)*\n\n${fallback.message}`, fallback.properties);
       return;
     }
   }
@@ -425,8 +459,6 @@ async function callN8nWebhook(messageText) {
   const contentType = response.headers.get("content-type") || "";
   if (contentType.includes("application/json")) {
     const data = await response.json();
-    
-    // Check common n8n AI response fields
     if (typeof data === "string") return data;
     if (data.output) return data.output;
     if (data.response) return data.response;
@@ -444,7 +476,6 @@ async function callN8nWebhook(messageText) {
     }
     return JSON.stringify(data, null, 2);
   } else {
-    // Plain text or markdown
     const textData = await response.text();
     return textData || "Message received by workflow!";
   }
@@ -549,7 +580,6 @@ window.openBookingModal = function(propId) {
   currentBookingProperty = prop;
   bookingPropertyTitle.textContent = `${prop.title} (${prop.formattedPrice})`;
   
-  // Set min date to today
   const today = new Date().toISOString().split('T')[0];
   const dateInput = document.getElementById("book-date");
   if (dateInput) {
@@ -604,8 +634,8 @@ btnClearChat.addEventListener("click", () => {
   if (confirm("Are you sure you want to reset the chat conversation?")) {
     chatMessages.innerHTML = "";
     state.chatHistory = [];
-    state.sessionId = getOrCreateSessionId(); // new session id
-    sendBotMessage(`👋 Chat cleared! How can I assist with your real estate search now?`, PROPERTIES.slice(0, 2));
+    state.sessionId = getOrCreateSessionId();
+    sendWelcomeMessage();
   }
 });
 

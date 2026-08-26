@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>EstateBot AI - Real Estate Assistant & Property Finder</title>
+  <title>EstateBot AI - Real Estate Chatbot</title>
   <script src="https://cdn.tailwindcss.com"></script>
   <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -13,26 +13,29 @@
 </head>
 <body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
 
-  <!-- Top Navigation Bar -->
-  <header class="border-b border-slate-800/80 bg-slate-900/60 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between">
+  <!-- Sleek Minimal Header -->
+  <header class="border-b border-slate-800/80 bg-slate-900/70 backdrop-blur-md sticky top-0 z-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
           <i class="fa-solid fa-building-user text-white text-lg"></i>
         </div>
         <div>
-          <h1 class="font-bold text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">EstateBot AI</h1>
-          <p class="text-xs text-emerald-400 font-medium flex items-center gap-1.5">
+          <h1 class="font-bold text-base sm:text-lg leading-tight bg-gradient-to-r from-white via-slate-200 to-emerald-400 bg-clip-text text-transparent">EstateBot AI</h1>
+          <p class="text-[11px] text-emerald-400 font-medium flex items-center gap-1.5">
             <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-            Real Estate AI Assistant Active
+            Real Estate Chatbot Active
           </p>
         </div>
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
-        <button id="btn-api-modal" title="n8n Webhook Settings" class="px-3 py-1.5 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700/80 text-xs text-slate-300 transition-all flex items-center gap-1.5">
+        <span id="ai-engine-badge" class="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-medium flex items-center gap-1.5">
           <i class="fa-solid fa-bolt text-amber-400"></i>
-          <span class="hidden sm:inline">n8n Webhook</span>
+          <span>n8n Webhook</span>
+        </span>
+        <button id="btn-api-modal" title="Settings / Webhook" class="p-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs transition-all">
+          <i class="fa-solid fa-sliders text-amber-400"></i>
         </button>
         <button id="btn-clear-chat" title="Clear Chat History" class="p-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-rose-500/20 hover:border-rose-500/40 hover:text-rose-400 text-slate-300 text-xs transition-all">
           <i class="fa-solid fa-trash-can"></i>
@@ -41,138 +44,79 @@
     </div>
   </header>
 
-  <!-- Main Content Layout -->
-  <main class="flex-1 max-w-7xl w-full mx-auto p-3 sm:p-6 grid grid-cols-1 lg:grid-cols-12 gap-6 items-start">
-    
-    <!-- Left Sidebar: Quick Stats, Featured Properties, Quick Filters (Desktop / Tablet) -->
-    <aside class="hidden lg:flex lg:col-span-4 flex-col gap-4 sticky top-24">
-      <!-- Info Card -->
-      <div class="glass-panel p-5 rounded-2xl border border-slate-800/80 bg-slate-900/40">
-        <div class="flex items-center gap-2 mb-3 text-emerald-400 font-semibold text-sm">
-          <i class="fa-solid fa-sparkles"></i>
-          <span>What can EstateBot do?</span>
-        </div>
-        <ul class="space-y-2 text-xs text-slate-300">
-          <li class="flex items-start gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
-            <span>Search houses, luxury villas & modern apartments</span>
-          </li>
-          <li class="flex items-start gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
-            <span>Calculate mortgages, payment plans & ROI</span>
-          </li>
-          <li class="flex items-start gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
-            <span>Book site visits & connect with verified agents</span>
-          </li>
-          <li class="flex items-start gap-2">
-            <i class="fa-solid fa-circle-check text-emerald-400 mt-0.5"></i>
-            <span>Answers questions in English & Urdu / Roman Urdu</span>
-          </li>
-        </ul>
-      </div>
-
-      <!-- Live Property Catalog Widget -->
-      <div class="glass-panel p-5 rounded-2xl border border-slate-800/80 bg-slate-900/40">
-        <div class="flex items-center justify-between mb-3">
-          <h3 class="text-sm font-semibold text-white flex items-center gap-2">
-            <i class="fa-solid fa-fire text-amber-400"></i>
-            Hot Listings
-          </h3>
-          <span class="text-[11px] text-slate-400">Auto-matched</span>
-        </div>
-        
-        <div id="hot-listings-container" class="space-y-3 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
-          <!-- Property Cards inserted dynamically via JS -->
-        </div>
-      </div>
-    </aside>
-
-    <!-- Right Column: Chat Window -->
-    <section class="lg:col-span-8 flex flex-col h-[calc(100vh-6.5rem)] glass-panel rounded-2xl border border-slate-800/80 bg-slate-900/40 overflow-hidden shadow-2xl">
+  <!-- Focused Pure Chat Layout -->
+  <main class="flex-1 max-w-4xl w-full mx-auto p-2 sm:p-4 flex flex-col h-[calc(100vh-4rem)]">
+    <div class="flex-1 flex flex-col glass-panel rounded-2xl border border-slate-800/80 bg-slate-900/50 overflow-hidden shadow-2xl">
       
-      <!-- Chat Header -->
-      <div class="px-5 py-3.5 border-b border-slate-800/80 bg-slate-900/70 flex items-center justify-between">
-        <div class="flex items-center gap-3">
-          <div class="relative">
-            <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-600 flex items-center justify-center text-white font-bold text-base shadow-md">
-              <i class="fa-solid fa-robot"></i>
-            </div>
-            <span class="absolute bottom-0 right-0 w-3 h-3 bg-emerald-500 border-2 border-slate-900 rounded-full"></span>
-          </div>
-          <div>
-            <h2 class="text-sm font-bold text-white">EstateBot Real Estate Agent</h2>
-            <p class="text-[11px] text-slate-400">Online 24/7 • Smart Property Consultation</p>
-          </div>
-        </div>
-
-        <div class="flex items-center gap-2">
-          <span id="ai-engine-badge" class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-medium flex items-center gap-1.5">
-            <i class="fa-solid fa-microchip"></i>
-            <span>Smart Engine</span>
-          </span>
-        </div>
-      </div>
-
       <!-- Messages Area -->
       <div id="chat-messages" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
         <!-- Messages rendered dynamically -->
       </div>
 
-      <!-- Quick Action Suggestions Bar -->
-      <div class="px-4 py-2 bg-slate-950/40 border-t border-slate-800/60 overflow-x-auto whitespace-nowrap flex gap-2 custom-scrollbar">
-        <button class="quick-prompt px-3 py-1.5 rounded-full bg-slate-800/70 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700 text-xs text-slate-300 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0" data-prompt="Show me available luxury villas for sale">
-          <i class="fa-solid fa-house-chimney text-emerald-400"></i>
-          Luxury Villas
-        </button>
-        <button class="quick-prompt px-3 py-1.5 rounded-full bg-slate-800/70 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700 text-xs text-slate-300 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0" data-prompt="Find apartments for rent under $2,500 / month">
-          <i class="fa-solid fa-building text-blue-400"></i>
-          Rental Apartments
-        </button>
-        <button class="quick-prompt px-3 py-1.5 rounded-full bg-slate-800/70 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700 text-xs text-slate-300 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0" data-prompt="I want to schedule a property site visit">
-          <i class="fa-regular fa-calendar-check text-amber-400"></i>
-          Schedule Site Visit
-        </button>
-        <button class="quick-prompt px-3 py-1.5 rounded-full bg-slate-800/70 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700 text-xs text-slate-300 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0" data-prompt="How much down payment do I need for a 500k house?">
-          <i class="fa-solid fa-calculator text-purple-400"></i>
-          Mortgage & Down Payment
-        </button>
-        <button class="quick-prompt px-3 py-1.5 rounded-full bg-slate-800/70 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700 text-xs text-slate-300 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0" data-prompt="Mujhe Islamabad ya Karachi ma investment plots batao">
-          <i class="fa-solid fa-map-location-dot text-rose-400"></i>
-          Plots / Investment
-        </button>
+      <!-- Suggested Questions Bar -->
+      <div class="px-4 py-2.5 bg-slate-950/60 border-t border-slate-800/60">
+        <div class="flex items-center gap-1.5 mb-2 text-[11px] font-semibold text-slate-400">
+          <i class="fa-solid fa-lightbulb text-amber-400"></i>
+          <span>Suggested Questions:</span>
+        </div>
+        <div class="overflow-x-auto whitespace-nowrap flex gap-2 pb-1 custom-scrollbar">
+          <button class="quick-prompt px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700/80 text-xs text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0 shadow-sm" data-prompt="Show me available luxury villas for sale">
+            <i class="fa-solid fa-house-chimney text-emerald-400"></i>
+            Luxury Villas for Sale
+          </button>
+          <button class="quick-prompt px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700/80 text-xs text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0 shadow-sm" data-prompt="Find apartments for rent under $2,500 / month">
+            <i class="fa-solid fa-building text-blue-400"></i>
+            Rental Apartments
+          </button>
+          <button class="quick-prompt px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700/80 text-xs text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0 shadow-sm" data-prompt="How much down payment do I need for a 500k house?">
+            <i class="fa-solid fa-calculator text-purple-400"></i>
+            Mortgage & Down Payment
+          </button>
+          <button class="quick-prompt px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700/80 text-xs text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0 shadow-sm" data-prompt="I want to schedule a property site visit tour">
+            <i class="fa-regular fa-calendar-check text-amber-400"></i>
+            Schedule Site Visit
+          </button>
+          <button class="quick-prompt px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700/80 text-xs text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0 shadow-sm" data-prompt="Mujhe commercial plots aur high ROI investment batao">
+            <i class="fa-solid fa-chart-line text-rose-400"></i>
+            Plots / ROI Investment
+          </button>
+          <button class="quick-prompt px-3 py-1.5 rounded-xl bg-slate-900/90 hover:bg-emerald-500/20 hover:border-emerald-500/50 border border-slate-700/80 text-xs text-slate-200 hover:text-emerald-300 transition-all flex items-center gap-1.5 shrink-0 shadow-sm" data-prompt="Karachi ya Islamabad ma plots ke rates kya hain?">
+            <i class="fa-solid fa-map-location-dot text-teal-400"></i>
+            Islamabad / Karachi Rates
+          </button>
+        </div>
       </div>
 
-      <!-- Chat Input Section -->
-      <div class="p-3 sm:p-4 bg-slate-900/90 border-t border-slate-800/80">
+      <!-- Chat Input Bar -->
+      <div class="p-3 sm:p-4 bg-slate-900/95 border-t border-slate-800/80">
         <form id="chat-form" class="flex items-center gap-2">
           <div class="relative flex-1">
             <input 
               type="text" 
               id="chat-input" 
-              placeholder="Ask about properties, prices, locations, or schedule a tour..."
-              class="w-full bg-slate-950/80 border border-slate-700 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 pr-10"
+              placeholder="Ask anything about properties, rates, tours, or mortgage..."
+              class="w-full bg-slate-950/90 border border-slate-700/90 rounded-xl px-4 py-3 text-sm text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500 shadow-inner"
               autocomplete="off"
             >
           </div>
           <button 
             type="submit" 
             id="btn-send"
-            class="px-4 sm:px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-semibold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 shrink-0 disabled:opacity-50 disabled:cursor-not-allowed cursor-pointer"
+            class="px-5 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-400 hover:to-teal-400 text-white font-semibold text-sm shadow-lg shadow-emerald-500/25 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer disabled:opacity-50"
           >
             <span>Send</span>
             <i class="fa-solid fa-paper-plane text-xs"></i>
           </button>
         </form>
         <div class="mt-2 flex items-center justify-between text-[11px] text-slate-500 px-1">
-          <span>Tip: You can ask in English or Roman Urdu</span>
+          <span>Type in English or Roman Urdu</span>
           <span>Press Enter to send</span>
         </div>
       </div>
-    </section>
+    </div>
   </main>
 
-  <!-- Optional API Key Modal for OpenAI / Gemini LLMs -->
+  <!-- Webhook / Settings Modal -->
   <div id="api-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
     <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
       <button id="btn-close-modal" class="absolute top-4 right-4 text-slate-400 hover:text-white">
@@ -184,21 +128,17 @@
           <i class="fa-solid fa-sliders"></i>
         </div>
         <div>
-          <h3 class="text-base font-bold text-white">AI Engine Configuration</h3>
-          <p class="text-xs text-slate-400">Optional: Connect live AI model</p>
+          <h3 class="text-base font-bold text-white">Chatbot Configuration</h3>
+          <p class="text-xs text-slate-400">Manage Webhook & AI Engine</p>
         </div>
       </div>
-
-      <p class="text-xs text-slate-300 mb-4 leading-relaxed">
-        By default, EstateBot uses its built-in smart Real Estate Knowledge Engine (Zero-setup required). If you want to connect a live OpenAI or Gemini key, you can enter it below.
-      </p>
 
       <div class="space-y-4">
         <div>
           <label class="block text-xs font-semibold text-slate-300 mb-1">Engine Mode</label>
           <select id="engine-select" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="webhook" selected>n8n AI Webhook (Active)</option>
-            <option value="builtin">Built-in Real Estate Smart Engine (Offline)</option>
+            <option value="webhook" selected>n8n AI Webhook (Live)</option>
+            <option value="builtin">Built-in Smart Engine (Offline)</option>
             <option value="openai">OpenAI (GPT-4o-mini)</option>
             <option value="gemini">Google Gemini API</option>
           </select>
@@ -207,13 +147,12 @@
         <div id="webhook-container">
           <label class="block text-xs font-semibold text-slate-300 mb-1">n8n Webhook URL</label>
           <input type="url" id="custom-webhook-url" value="https://n8n.bminternational.com.pk/webhook/6c925c11-65e3-41dd-a8be-2d495f04859c" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-          <p class="text-[10px] text-emerald-400 mt-1">✓ Messages will be transmitted live to your n8n workflow.</p>
+          <p class="text-[10px] text-emerald-400 mt-1">✓ Messages are transmitted live to your n8n workflow.</p>
         </div>
 
         <div id="api-key-container" class="hidden">
           <label class="block text-xs font-semibold text-slate-300 mb-1">API Key</label>
           <input type="password" id="custom-api-key" placeholder="sk-..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-          <p class="text-[10px] text-slate-500 mt-1">Keys are stored solely in your browser's localStorage and never transmitted elsewhere.</p>
         </div>
 
         <div class="flex justify-end gap-2 pt-2">
