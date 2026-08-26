@@ -98,10 +98,22 @@ const PROPERTIES = [
   }
 ];
 
+// Session ID Generation for n8n AI Chat Memory
+function getOrCreateSessionId() {
+  let sid = localStorage.getItem("estatebot_session_id");
+  if (!sid) {
+    sid = "session_" + Math.random().toString(36).substring(2, 11) + "_" + Date.now();
+    localStorage.setItem("estatebot_session_id", sid);
+  }
+  return sid;
+}
+
 // App State
 let state = {
-  engine: localStorage.getItem("estatebot_engine") || "builtin",
+  engine: localStorage.getItem("estatebot_engine") || "webhook",
+  webhookUrl: localStorage.getItem("estatebot_webhook") || "https://n8n.bminternational.com.pk/webhook/6c925c11-65e3-41dd-a8be-2d495f04859c",
   apiKey: localStorage.getItem("estatebot_apikey") || "",
+  sessionId: getOrCreateSessionId(),
   chatHistory: []
 };
 
@@ -119,6 +131,8 @@ const apiModal = document.getElementById("api-modal");
 const btnApiModal = document.getElementById("btn-api-modal");
 const btnCloseModal = document.getElementById("btn-close-modal");
 const engineSelect = document.getElementById("engine-select");
+const webhookContainer = document.getElementById("webhook-container");
+const customWebhookUrlInput = document.getElementById("custom-webhook-url");
 const apiKeyContainer = document.getElementById("api-key-container");
 const customApiKeyInput = document.getElementById("custom-api-key");
 const btnSaveSettings = document.getElementById("btn-save-settings");
@@ -138,7 +152,7 @@ document.addEventListener("DOMContentLoaded", () => {
   // Initial Greeting message
   if (state.chatHistory.length === 0) {
     sendBotMessage(
-      `👋 **Hello & Welcome to EstateBot AI!**\n\nI am your 24/7 Real Estate Assistant. Whether you're looking to **buy a luxury home**, **find a rental apartment**, **invest in commercial plots**, or **calculate mortgages & ROI**, I'm here to help!\n\n💡 *Tip: You can ask me in English or Roman Urdu.* How can I assist your property search today?`,
+      `👋 **Hello & Welcome to EstateBot AI!**\n\nI am your Real Estate AI Assistant connected directly to our live property advisor. Ask me anything about:\n- 🏡 **Available Houses, Luxury Villas & Apartments**\n- 💰 **Pricing, Down Payments & Mortgages**\n- 📅 **Scheduling a Site Tour / Visit**\n- 📈 **High-yield Real Estate Investments**\n\nHow can I help you today?`,
       PROPERTIES.slice(0, 2)
     );
   }
@@ -295,8 +309,11 @@ function scrollToBottom() {
   chatMessages.scrollTop = chatMessages.scrollHeight;
 }
 
-// Markdown Formatter (Bold, Bullet lists, Code, Line breaks)
+// Markdown Formatter
 function formatMarkdown(text) {
+  if (typeof text !== "string") {
+    text = JSON.stringify(text);
+  }
   let html = escapeHTML(text);
   // Bold
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
@@ -312,7 +329,7 @@ function formatMarkdown(text) {
 }
 
 function escapeHTML(str) {
-  return str
+  return String(str)
     .replace(/&/g, "&amp;")
     .replace(/</g, "&lt;")
     .replace(/>/g, "&gt;")
@@ -331,34 +348,106 @@ chatForm.addEventListener("submit", (e) => {
   processUserQuery(query);
 });
 
-// Process Query Routing (Built-in or LLM API)
+// Process Query Routing (n8n Webhook / OpenAI / Gemini / Built-in)
 async function processUserQuery(query) {
   showTypingIndicator();
 
-  // If user configured OpenAI or Gemini API
+  // 1. Primary: n8n Webhook
+  if (state.engine === "webhook" && state.webhookUrl) {
+    try {
+      const response = await callN8nWebhook(query);
+      if (response) {
+        sendBotMessage(response);
+        return;
+      }
+    } catch (err) {
+      console.warn("n8n Webhook error:", err);
+      // Fallback message with built-in reply
+      const fallback = evaluateRealEstateQuery(query);
+      sendBotMessage(`*(Webhook Notice: Live connection timed out, showing local response)*\n\n${fallback.message}`, fallback.properties);
+      return;
+    }
+  }
+
+  // 2. OpenAI
   if (state.engine === "openai" && state.apiKey) {
     try {
       const response = await callOpenAI(query);
       sendBotMessage(response);
       return;
     } catch (err) {
-      console.warn("OpenAI API call failed, falling back to smart engine:", err);
+      console.warn("OpenAI API error, fallback:", err);
     }
-  } else if (state.engine === "gemini" && state.apiKey) {
+  } 
+  
+  // 3. Gemini
+  else if (state.engine === "gemini" && state.apiKey) {
     try {
       const response = await callGemini(query);
       sendBotMessage(response);
       return;
     } catch (err) {
-      console.warn("Gemini API call failed, falling back to smart engine:", err);
+      console.warn("Gemini API error, fallback:", err);
     }
   }
 
-  // Built-in intelligent Real Estate response engine
+  // 4. Built-in Offline Engine
   setTimeout(() => {
     const result = evaluateRealEstateQuery(query);
     sendBotMessage(result.message, result.properties);
-  }, 600);
+  }, 500);
+}
+
+// n8n Webhook Request
+async function callN8nWebhook(messageText) {
+  const payload = {
+    message: messageText,
+    chatInput: messageText,
+    sessionId: state.sessionId,
+    timestamp: new Date().toISOString(),
+    user: "Website Visitor",
+    channel: "real_estate_web_chat"
+  };
+
+  const response = await fetch(state.webhookUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Accept": "application/json, text/plain, */*"
+    },
+    body: JSON.stringify(payload)
+  });
+
+  if (!response.ok) {
+    throw new Error(`Webhook responded with status ${response.status}`);
+  }
+
+  const contentType = response.headers.get("content-type") || "";
+  if (contentType.includes("application/json")) {
+    const data = await response.json();
+    
+    // Check common n8n AI response fields
+    if (typeof data === "string") return data;
+    if (data.output) return data.output;
+    if (data.response) return data.response;
+    if (data.text) return data.text;
+    if (data.message) return data.message;
+    if (data.content) return data.content;
+    if (data.data && data.data.output) return data.data.output;
+    if (Array.isArray(data) && data.length > 0) {
+      const first = data[0];
+      if (typeof first === "string") return first;
+      if (first.output) return first.output;
+      if (first.text) return first.text;
+      if (first.message) return first.message;
+      if (first.response) return first.response;
+    }
+    return JSON.stringify(data, null, 2);
+  } else {
+    // Plain text or markdown
+    const textData = await response.text();
+    return textData || "Message received by workflow!";
+  }
 }
 
 // Core Real Estate Logic & Multi-lingual Roman Urdu / English Engine
@@ -366,7 +455,7 @@ function evaluateRealEstateQuery(rawQuery) {
   const q = rawQuery.toLowerCase().trim();
 
   // 1. Greetings
-  if (/^(hi|hello|hey|salam|assalam|aOA|kese ho|kaisay ho|good morning|good evening)/i.test(q)) {
+  if (/^(hi|hello|hey|salam|assalam|aoa|kese ho|kaisay ho|good morning|good evening)/i.test(q)) {
     return {
       message: `Hello! 😊 I am your **EstateBot Real Estate Consultant**. I can assist you with:\n\n- Finding **Villas, Houses, Apartments & Commercial Plots**\n- Booking a **property tour/visit**\n- Calculating **Mortgage EMI & Down payments**\n- Best **Investment opportunities & ROI**\n\nWhat type of property are you interested in today?`,
       properties: PROPERTIES.slice(0, 2)
@@ -424,18 +513,11 @@ function evaluateRealEstateQuery(rawQuery) {
     };
   }
 
-  // 8. Roman Urdu Support ("kya price hai", "kharidna hai", "rate batao")
+  // 8. Roman Urdu Support
   if (q.includes("chahiye") || q.includes("kharidna") || q.includes("lena hai") || q.includes("rate") || q.includes("qeemat") || q.includes("paisa") || q.includes("kitna")) {
     return {
       message: `Ji bilkul! Hamaray paas **Ready to Move Houses**, **Luxury Villas**, **Apartments for Rent**, or **Commercial Plots** available hain.\n\nAap apna **Budget** or **Location** (e.g. Islamabad, Lahore, Karachi ya Downtown) bataiye, taake main aapko best options dikha sakoon:`,
       properties: PROPERTIES.slice(0, 3)
-    };
-  }
-
-  // 9. Contact / Agent Connect
-  if (q.includes("contact") || q.includes("number") || q.includes("agent") || q.includes("call") || q.includes("phone") || q.includes("rabta")) {
-    return {
-      message: `📞 **Contact Certified Real Estate Agents**\n\n- **Helpline**: +1 (800) 555-REAL / +92 300 1234567\n- **Email**: inquiries@estatebot-demo.com\n- **Office Hours**: 24/7 Live Support\n\nYou can also click **"Book Tour"** on any property card to have an agent directly call you!`
     };
   }
 
@@ -450,8 +532,9 @@ function evaluateRealEstateQuery(rawQuery) {
 window.handleCardClick = function(propId) {
   const prop = PROPERTIES.find(p => p.id === propId);
   if (prop) {
-    addUserMessage(`Tell me more about ${prop.title}`);
-    sendBotMessage(`### 🏡 **${prop.title}**\n\n**Price**: ${prop.formattedPrice}\n**Location**: ${prop.location} (${prop.city})\n**Specs**: ${prop.beds ? `${prop.beds} Beds, ` : ''}${prop.baths ? `${prop.baths} Baths, ` : ''}${prop.sqft}\n\n**Description**: ${prop.description}\n\n**Key Highlights**:\n${prop.features.map(f => `- ${f}`).join('\n')}\n\nWould you like to schedule a private viewing tour?`, [prop]);
+    const query = `Tell me more about ${prop.title}`;
+    addUserMessage(query);
+    processUserQuery(query);
   }
 };
 
@@ -481,7 +564,7 @@ btnCloseBooking.addEventListener("click", () => {
   bookingModal.classList.add("hidden");
 });
 
-bookingForm.addEventListener("submit", (e) => {
+bookingForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   const name = document.getElementById("book-name").value.trim();
   const phone = document.getElementById("book-phone").value.trim();
@@ -490,6 +573,25 @@ bookingForm.addEventListener("submit", (e) => {
 
   bookingModal.classList.add("hidden");
   bookingForm.reset();
+
+  // Send tour booking event to n8n webhook
+  if (state.engine === "webhook" && state.webhookUrl) {
+    try {
+      fetch(state.webhookUrl, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          event: "tour_booking_lead",
+          sessionId: state.sessionId,
+          name,
+          phone,
+          date,
+          notes,
+          property: currentBookingProperty
+        })
+      }).catch(err => console.warn("Lead webhook ping failed:", err));
+    } catch(e) {}
+  }
 
   // Confirmation in Chat
   setTimeout(() => {
@@ -502,51 +604,68 @@ btnClearChat.addEventListener("click", () => {
   if (confirm("Are you sure you want to reset the chat conversation?")) {
     chatMessages.innerHTML = "";
     state.chatHistory = [];
+    state.sessionId = getOrCreateSessionId(); // new session id
     sendBotMessage(`👋 Chat cleared! How can I assist with your real estate search now?`, PROPERTIES.slice(0, 2));
   }
 });
 
-// API Settings Modal Logic
+// Settings Modal Logic
 btnApiModal.addEventListener("click", () => {
   apiModal.classList.remove("hidden");
   engineSelect.value = state.engine;
+  customWebhookUrlInput.value = state.webhookUrl;
   customApiKeyInput.value = state.apiKey;
-  toggleApiKeyField();
+  toggleConfigFields();
 });
 
 btnCloseModal.addEventListener("click", () => {
   apiModal.classList.add("hidden");
 });
 
-engineSelect.addEventListener("change", toggleApiKeyField);
+engineSelect.addEventListener("change", toggleConfigFields);
 
-function toggleApiKeyField() {
-  if (engineSelect.value === "builtin") {
+function toggleConfigFields() {
+  const val = engineSelect.value;
+  if (val === "webhook") {
+    webhookContainer.classList.remove("hidden");
     apiKeyContainer.classList.add("hidden");
-  } else {
+  } else if (val === "openai" || val === "gemini") {
+    webhookContainer.classList.add("hidden");
     apiKeyContainer.classList.remove("hidden");
+  } else {
+    webhookContainer.classList.add("hidden");
+    apiKeyContainer.classList.add("hidden");
   }
 }
 
 btnSaveSettings.addEventListener("click", () => {
   state.engine = engineSelect.value;
+  state.webhookUrl = customWebhookUrlInput.value.trim();
   state.apiKey = customApiKeyInput.value.trim();
+  
   localStorage.setItem("estatebot_engine", state.engine);
+  localStorage.setItem("estatebot_webhook", state.webhookUrl);
   localStorage.setItem("estatebot_apikey", state.apiKey);
 
-  if (state.engine === "builtin") {
-    aiEngineBadge.innerHTML = `<i class="fa-solid fa-microchip"></i><span>Smart Engine</span>`;
-  } else {
-    aiEngineBadge.innerHTML = `<i class="fa-solid fa-cloud"></i><span>${state.engine.toUpperCase()} Live</span>`;
-  }
-
+  updateEngineBadge();
   apiModal.classList.add("hidden");
-  sendBotMessage(`⚙️ AI Engine settings updated to **${state.engine.toUpperCase()}**.`);
+  sendBotMessage(`⚙️ Settings updated! Active Engine: **${state.engine.toUpperCase()}**`);
 });
 
 function initSettings() {
-  if (state.engine !== "builtin" && state.apiKey) {
-    aiEngineBadge.innerHTML = `<i class="fa-solid fa-cloud"></i><span>${state.engine.toUpperCase()} Live</span>`;
+  updateEngineBadge();
+}
+
+function updateEngineBadge() {
+  if (state.engine === "webhook") {
+    aiEngineBadge.innerHTML = `<i class="fa-solid fa-bolt text-amber-400"></i><span>n8n Webhook</span>`;
+    aiEngineBadge.className = "px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-medium flex items-center gap-1.5";
+  } else if (state.engine === "builtin") {
+    aiEngineBadge.innerHTML = `<i class="fa-solid fa-microchip text-emerald-400"></i><span>Smart Engine</span>`;
+    aiEngineBadge.className = "px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-medium flex items-center gap-1.5";
+  } else {
+    aiEngineBadge.innerHTML = `<i class="fa-solid fa-cloud text-blue-400"></i><span>${state.engine.toUpperCase()} Live</span>`;
+    aiEngineBadge.className = "px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[11px] font-medium flex items-center gap-1.5";
   }
 }
 

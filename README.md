@@ -7,8 +7,9 @@ An intelligent, responsive, and sleek Real Estate Chatbot website designed to as
 ## ✨ Features
 
 - 💬 **Interactive Real Estate Chatbot**: Responds with rich property cards, prices, specs, and details.
+- ⚡ **n8n AI Webhook Integration**: Connected directly to your n8n workflow for live autonomous AI agent replies (`https://n8n.bminternational.com.pk/webhook/...`).
 - 🌐 **Multi-language / Roman Urdu & English Support**: Understands queries in English as well as Roman Urdu (`ghar chahiye`, `rent ka flat`, `plot rate`, etc.).
-- 📅 **Site Visit & Tour Booking System**: Direct booking modal that saves tour appointments with instant chat confirmation.
+- 📅 **Site Visit & Tour Booking System**: Direct booking modal that captures customer details and transmits leads to n8n webhook.
 - 🧮 **Mortgage & Financing Guidance**: Answers EMI, down payment calculations, and ROI queries.
 - 🎨 **Modern Dark Glassmorphism UI**: Built with Tailwind CSS, Lucide/FontAwesome icons, and smooth animations.
 - ⚡ **Zero-Config Built-in AI Engine**: Works immediately in any browser without requiring backend servers or API keys.
