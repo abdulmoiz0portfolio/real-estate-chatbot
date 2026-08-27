@@ -231,10 +231,15 @@ async function processUserQuery(query) {
 
 // n8n Webhook Request
 async function callN8nWebhook(messageText) {
+  // Format clean conversation history
+  const recentHistory = state.chatHistory.slice(-10).map(m => `${m.role === 'user' ? 'User' : 'PropertyBot'}: ${m.content}`).join("\n");
+
   const payload = {
     message: messageText,
     chatInput: messageText,
     sessionId: state.sessionId,
+    history: recentHistory,
+    chatHistory: state.chatHistory.slice(-10),
     timestamp: new Date().toISOString(),
     user: "Website Visitor"
   };
