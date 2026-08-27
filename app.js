@@ -1,103 +1,3 @@
-// Property Database with rich specs and high quality images
-const PROPERTIES = [
-  {
-    id: "prop-1",
-    title: "Azure Horizon Luxury Villa",
-    type: "villa",
-    status: "sale",
-    price: 850000,
-    formattedPrice: "$850,000",
-    location: "Palm View Heights / Sector F-7",
-    city: "Islamabad / Dubai",
-    beds: 5,
-    baths: 6,
-    sqft: "5,200 sq ft",
-    image: "https://images.unsplash.com/photo-1613490493576-7fde63acd811?auto=format&fit=crop&w=800&q=80",
-    features: ["Infinity Pool", "Smart Home", "Solar Powered", "Double Garage"],
-    description: "Ultra-luxury modern villa featuring panoramic views, floor-to-ceiling glass walls, private cinema, and designer landscaping."
-  },
-  {
-    id: "prop-2",
-    title: "Skyline Modern Penthouse",
-    type: "apartment",
-    status: "rent",
-    price: 3200,
-    formattedPrice: "$3,200 / month",
-    location: "Downtown Marina Boulevard",
-    city: "Downtown / Karachi",
-    beds: 3,
-    baths: 3,
-    sqft: "2,400 sq ft",
-    image: "https://images.unsplash.com/photo-1512917774080-9991f1c4c750?auto=format&fit=crop&w=800&q=80",
-    features: ["Private Rooftop", "24/7 Concierge", "Valet Parking", "Gym & Spa"],
-    description: "High-floor penthouse with stunning 360-degree city skyline views, premium Italian marble, and keyless biometric entry."
-  },
-  {
-    id: "prop-3",
-    title: "The Maple Grove Family Residence",
-    type: "house",
-    status: "sale",
-    price: 495000,
-    formattedPrice: "$495,000",
-    location: "Oakridge Estates / Bahria Town",
-    city: "Suburban / Lahore",
-    beds: 4,
-    baths: 4,
-    sqft: "3,600 sq ft",
-    image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=800&q=80",
-    features: ["Lush Backyard", "Chef's Kitchen", "Gated Security", "Near Top Schools"],
-    description: "Spacious suburban home in a serene gated community with clubhouse access, parks, and 24/7 security patrol."
-  },
-  {
-    id: "prop-4",
-    title: "The Boulevard Studio Apartment",
-    type: "apartment",
-    status: "rent",
-    price: 1450,
-    formattedPrice: "$1,450 / month",
-    location: "Financial District / Blue Area",
-    city: "City Center",
-    beds: 1,
-    baths: 1,
-    sqft: "750 sq ft",
-    image: "https://images.unsplash.com/photo-1522708323590-d24dbb6b0267?auto=format&fit=crop&w=800&q=80",
-    features: ["Fully Furnished", "High-speed Internet", "Metro Access", "Rooftop Pool"],
-    description: "Turnkey furnished apartment tailored for young professionals and executives with walking distance to rapid transit."
-  },
-  {
-    id: "prop-5",
-    title: "Prime Commercial Corner Plot (1 Kanal)",
-    type: "plot",
-    status: "sale",
-    price: 620000,
-    formattedPrice: "$620,000 (PKR ~17.5 Cr)",
-    location: "DHA Phase 6 Commercial Hub",
-    city: "DHA / Islamabad / Lahore",
-    beds: 0,
-    baths: 0,
-    sqft: "4,500 sq ft (1 Kanal)",
-    image: "https://images.unsplash.com/photo-1500382017468-9049fed747ef?auto=format&fit=crop&w=800&q=80",
-    features: ["Main Boulevard", "Direct Road Access", "High ROI 12-15%", "Immediate Possession"],
-    description: "High-demand commercial plot with permission for 6-story plaza development. Excellent capital appreciation and rental yield."
-  },
-  {
-    id: "prop-6",
-    title: "Emerald Bay Coastal Villa",
-    type: "villa",
-    status: "sale",
-    price: 1250000,
-    formattedPrice: "$1,250,000",
-    location: "Seaside Drive / Waterfront",
-    city: "Waterfront",
-    beds: 6,
-    baths: 7,
-    sqft: "7,000 sq ft",
-    image: "https://images.unsplash.com/photo-1580587771525-78b9dba3b914?auto=format&fit=crop&w=800&q=80",
-    features: ["Private Beach Access", "Helipad Access", "Wine Cellar", "Guest House"],
-    description: "Masterpiece waterfront estate offering private direct beachfront, infinity edge deck, and state of the art finishes."
-  }
-];
-
 // Session ID Generation for n8n AI Chat Memory
 function getOrCreateSessionId() {
   let sid = localStorage.getItem("estatebot_session_id");
@@ -136,12 +36,6 @@ const apiKeyContainer = document.getElementById("api-key-container");
 const customApiKeyInput = document.getElementById("custom-api-key");
 const btnSaveSettings = document.getElementById("btn-save-settings");
 
-const bookingModal = document.getElementById("booking-modal");
-const btnCloseBooking = document.getElementById("btn-close-booking");
-const bookingForm = document.getElementById("booking-form");
-const bookingPropertyTitle = document.getElementById("booking-property-title");
-let currentBookingProperty = null;
-
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
   initSettings();
@@ -168,38 +62,38 @@ function sendWelcomeMessage() {
           <span>👋 Assalam-o-Alaikum & Welcome to EstateBot AI!</span>
         </h3>
         <p class="text-slate-300 text-xs sm:text-sm mb-4">
-          I am your 24/7 dedicated Real Estate Assistant. Ask me anything about property discovery, prices, schedules, and investment opportunities.
+          I am your dedicated <strong>Real Estate FAQ Assistant</strong>. Ask me anything about property purchasing, required documents, down payments, legal NOC verification, and investment ROI.
         </p>
 
-        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 mb-3">
+        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 mb-2">
           <p class="text-xs font-bold text-emerald-400 mb-2.5 flex items-center gap-1.5">
             <i class="fa-solid fa-sparkles"></i>
             Suggested Questions to ask:
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button onclick="askSuggestedQuestion('Show me available luxury villas for sale')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-house-chimney text-emerald-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">🏡 Show me luxury villas for sale</span>
-            </button>
-            <button onclick="askSuggestedQuestion('Find apartments for rent under $2,500 / month')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-building text-blue-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">🏢 Rental apartments under $2.5k</span>
+            <button onclick="askSuggestedQuestion('What documents are required to buy property?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-file-shield text-emerald-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">📄 Required documents for buying</span>
             </button>
             <button onclick="askSuggestedQuestion('How much down payment do I need for a 500k house?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
               <i class="fa-solid fa-calculator text-purple-400 shrink-0 text-[11px]"></i>
               <span class="truncate">💰 Down payment & mortgage plan</span>
             </button>
-            <button onclick="askSuggestedQuestion('I want to schedule a property site visit tour')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-regular fa-calendar-check text-amber-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">📅 Schedule a property site tour</span>
+            <button onclick="askSuggestedQuestion('How to verify NOC and legal approval of a project?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-stamp text-amber-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">🏛️ NOC & legal verification</span>
             </button>
-            <button onclick="askSuggestedQuestion('Mujhe commercial plots aur high ROI investment batao')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-rose-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">📈 High ROI commercial plots</span>
+            <button onclick="askSuggestedQuestion('What is the difference between Commercial & Residential ROI?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-chart-line text-blue-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">📈 Commercial vs Residential ROI</span>
             </button>
-            <button onclick="askSuggestedQuestion('Karachi ya Islamabad ma plots ke rates kya hain?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-map-location-dot text-teal-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">🇵🇰 Islamabad & Karachi rates</span>
+            <button onclick="askSuggestedQuestion('How do developer installment plans work?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-money-check-dollar text-teal-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">📅 How installment plans work</span>
+            </button>
+            <button onclick="askSuggestedQuestion('Islamabad aur Karachi me best real estate investment areas kon se hain?')" class="text-left p-2 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+              <i class="fa-solid fa-map-location-dot text-rose-400 shrink-0 text-[11px]"></i>
+              <span class="truncate">🇵🇰 Islamabad & Karachi areas</span>
             </button>
           </div>
         </div>
@@ -272,7 +166,7 @@ function hideTypingIndicator() {
   if (typingEl) typingEl.remove();
 }
 
-function sendBotMessage(markdownText, attachedProperties = null) {
+function sendBotMessage(markdownText) {
   hideTypingIndicator();
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement("div");
@@ -280,56 +174,13 @@ function sendBotMessage(markdownText, attachedProperties = null) {
 
   let formattedContent = formatMarkdown(markdownText);
 
-  let cardsHtml = "";
-  if (attachedProperties && attachedProperties.length > 0) {
-    cardsHtml = `
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-3 mt-3">
-        ${attachedProperties.map(prop => `
-          <div class="bg-slate-950/90 border border-slate-800 rounded-xl overflow-hidden shadow-lg property-card-glow flex flex-col justify-between">
-            <div class="relative h-32 w-full overflow-hidden">
-              <img src="${prop.image}" alt="${prop.title}" class="w-full h-full object-cover transition-transform duration-500 hover:scale-105" />
-              <span class="absolute top-2 left-2 text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full ${prop.status === 'rent' ? 'bg-blue-600/90 text-white' : 'bg-emerald-600/90 text-white'} backdrop-blur-sm">
-                For ${prop.status.toUpperCase()}
-              </span>
-              <span class="absolute bottom-2 right-2 text-xs font-black px-2.5 py-1 rounded-lg bg-slate-900/90 text-emerald-400 backdrop-blur-sm border border-slate-700/50">
-                ${prop.formattedPrice}
-              </span>
-            </div>
-            <div class="p-3">
-              <h4 class="text-xs font-bold text-white truncate">${prop.title}</h4>
-              <p class="text-[11px] text-slate-400 flex items-center gap-1 mt-1 truncate">
-                <i class="fa-solid fa-location-dot text-rose-400 text-[10px]"></i>
-                ${prop.location}
-              </p>
-              <div class="flex items-center gap-3 text-[10px] text-slate-300 my-2 pt-2 border-t border-slate-800/80">
-                ${prop.beds ? `<span><i class="fa-solid fa-bed text-emerald-400 mr-1"></i>${prop.beds} Beds</span>` : ''}
-                ${prop.baths ? `<span><i class="fa-solid fa-bath text-blue-400 mr-1"></i>${prop.baths} Baths</span>` : ''}
-                <span><i class="fa-solid fa-ruler-combined text-amber-400 mr-1"></i>${prop.sqft}</span>
-              </div>
-              <div class="flex items-center gap-2 pt-1">
-                <button onclick="openBookingModal('${prop.id}')" class="flex-1 py-1.5 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-[11px] font-bold transition-all flex items-center justify-center gap-1.5">
-                  <i class="fa-regular fa-calendar-check"></i>
-                  Book Tour
-                </button>
-                <button onclick="sendPropertyInquiry('${prop.id}')" class="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-200 text-[11px] font-medium border border-slate-700 transition-all">
-                  Details
-                </button>
-              </div>
-            </div>
-          </div>
-        `).join("")}
-      </div>
-    `;
-  }
-
   msgEl.innerHTML = `
     <div class="w-9 h-9 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 flex items-center justify-center text-white text-xs shrink-0 shadow-md shadow-emerald-500/20">
       <i class="fa-solid fa-robot"></i>
     </div>
     <div class="max-w-[95%] sm:max-w-[85%]">
-      <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
+      <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3.5 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
         ${formattedContent}
-        ${cardsHtml}
       </div>
       <div class="text-[10px] text-slate-500 mt-1">${time}</div>
     </div>
@@ -350,6 +201,9 @@ function formatMarkdown(text) {
     text = JSON.stringify(text);
   }
   let html = escapeHTML(text);
+  // Headers
+  html = html.replace(/^### (.*$)/gim, '<h3 class="text-sm font-bold text-white mt-2 mb-1">$1</h3>');
+  html = html.replace(/^## (.*$)/gim, '<h2 class="text-base font-bold text-white mt-2 mb-1">$1</h2>');
   // Bold
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-bold">$1</strong>');
   // Italic
@@ -396,9 +250,9 @@ async function processUserQuery(query) {
         return;
       }
     } catch (err) {
-      console.warn("n8n Webhook error:", err);
+      console.warn("n8n Webhook fetch failed:", err);
       const fallback = evaluateRealEstateQuery(query);
-      sendBotMessage(`*(Webhook Notice: Response timed out, showing local response)*\n\n${fallback.message}`, fallback.properties);
+      sendBotMessage(`${fallback.message}`);
       return;
     }
   }
@@ -428,206 +282,127 @@ async function processUserQuery(query) {
   // 4. Built-in Offline Engine
   setTimeout(() => {
     const result = evaluateRealEstateQuery(query);
-    sendBotMessage(result.message, result.properties);
-  }, 500);
+    sendBotMessage(result.message);
+  }, 400);
 }
 
-// n8n Webhook Request
+// n8n Webhook Request with Timeout
 async function callN8nWebhook(messageText) {
   const payload = {
     message: messageText,
     chatInput: messageText,
     sessionId: state.sessionId,
     timestamp: new Date().toISOString(),
-    user: "Website Visitor",
-    channel: "real_estate_web_chat"
+    user: "Website Visitor"
   };
 
-  const response = await fetch(state.webhookUrl, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Accept": "application/json, text/plain, */*"
-    },
-    body: JSON.stringify(payload)
-  });
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 20000); // 20s timeout
 
-  if (!response.ok) {
-    throw new Error(`Webhook responded with status ${response.status}`);
-  }
+  try {
+    const response = await fetch(state.webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json, text/plain, */*"
+      },
+      body: JSON.stringify(payload),
+      signal: controller.signal
+    });
 
-  const contentType = response.headers.get("content-type") || "";
-  if (contentType.includes("application/json")) {
-    const data = await response.json();
-    if (typeof data === "string") return data;
-    if (data.output) return data.output;
-    if (data.response) return data.response;
-    if (data.text) return data.text;
-    if (data.message) return data.message;
-    if (data.content) return data.content;
-    if (data.data && data.data.output) return data.data.output;
-    if (Array.isArray(data) && data.length > 0) {
-      const first = data[0];
-      if (typeof first === "string") return first;
-      if (first.output) return first.output;
-      if (first.text) return first.text;
-      if (first.message) return first.message;
-      if (first.response) return first.response;
+    clearTimeout(timeoutId);
+
+    if (!response.ok) {
+      throw new Error(`Webhook responded with status ${response.status}`);
     }
-    return JSON.stringify(data, null, 2);
-  } else {
-    const textData = await response.text();
-    return textData || "Message received by workflow!";
+
+    const contentType = response.headers.get("content-type") || "";
+    if (contentType.includes("application/json")) {
+      const data = await response.json();
+      if (typeof data === "string") return data;
+      if (data.output) return data.output;
+      if (data.response) return data.response;
+      if (data.text) return data.text;
+      if (data.message) return data.message;
+      if (data.content) return data.content;
+      if (data.data && data.data.output) return data.data.output;
+      if (Array.isArray(data) && data.length > 0) {
+        const first = data[0];
+        if (typeof first === "string") return first;
+        if (first.output) return first.output;
+        if (first.text) return first.text;
+        if (first.message) return first.message;
+        if (first.response) return first.response;
+      }
+      return JSON.stringify(data, null, 2);
+    } else {
+      const textData = await response.text();
+      return textData || "Message processed successfully.";
+    }
+  } catch (err) {
+    clearTimeout(timeoutId);
+    throw err;
   }
 }
 
-// Core Real Estate Logic & Multi-lingual Roman Urdu / English Engine
+// Core Real Estate FAQ Engine (Text only)
 function evaluateRealEstateQuery(rawQuery) {
   const q = rawQuery.toLowerCase().trim();
 
   // 1. Greetings
   if (/^(hi|hello|hey|salam|assalam|aoa|kese ho|kaisay ho|good morning|good evening)/i.test(q)) {
     return {
-      message: `Hello! 😊 I am your **EstateBot Real Estate Consultant**. I can assist you with:\n\n- Finding **Villas, Houses, Apartments & Commercial Plots**\n- Booking a **property tour/visit**\n- Calculating **Mortgage EMI & Down payments**\n- Best **Investment opportunities & ROI**\n\nWhat type of property are you interested in today?`,
-      properties: PROPERTIES.slice(0, 2)
+      message: `Hello! 😊 I am your **Real Estate FAQ Assistant**.\n\nI can help you with:\n- 📄 **Required Documents** for property buying/transfer\n- 💰 **Down Payments & Mortgage/EMI Calculations**\n- 🏛️ **NOC & Legal Approvals** (CDA, LDA, SBCA)\n- 📈 **Investment ROI & Rental Yields**\n- 🇵🇰 **Property Rates & Installment Plans**\n\nWhat would you like to know?`
     };
   }
 
-  // 2. Schedule Site Visit / Tour / Visit Booking
-  if (q.includes("schedule") || q.includes("visit") || q.includes("tour") || q.includes("dekhna") || q.includes("booking") || q.includes("appointment")) {
+  // 2. Required Documents
+  if (q.includes("document") || q.includes("kaagazat") || q.includes("papers") || q.includes("files") || q.includes("dastaveez")) {
     return {
-      message: `📅 **Property Site Visit Booking**\n\nYou can easily book an on-site private tour with one of our certified agents!\n\nPlease select any property below and click **"Book Tour"**, or tell me your preferred city/locality and timing.`,
-      properties: PROPERTIES.slice(0, 3)
+      message: `📄 **Documents Required to Buy/Transfer Property:**\n\n1. **Buyer & Seller CNIC / NICOP Copies** (Original verified via NADRA)\n2. **Passport size Photographs** (2 to 4 copies)\n3. **Allotment Letter / Transfer Letter** issued by the housing authority/society\n4. **Non-Encumbrance Certificate (NEC)** & NOC from the relevant development authority\n5. **Tax Challan & Stamp Duty Receipts** (FBR withholding tax / CVT)\n6. **Sale Agreement (Iqraarnama)** on verified stamp paper\n\nFor Overseas Pakistanis: A verified **Power of Attorney (PoA)** stamped by the Pakistani Embassy is required.`
     };
   }
 
-  // 3. Mortgage / EMI / Down Payment / Loan / Installment
-  if (q.includes("mortgage") || q.includes("down payment") || q.includes("calculator") || q.includes("emi") || q.includes("loan") || q.includes("installment") || q.includes("qist") || q.includes("downpayment")) {
+  // 3. Down Payment / Mortgage / EMI / Loan
+  if (q.includes("down payment") || q.includes("mortgage") || q.includes("calculator") || q.includes("emi") || q.includes("loan") || q.includes("installment") || q.includes("qist") || q.includes("downpayment")) {
     return {
-      message: `📊 **Mortgage & Financing Guide**\n\nFor a standard home purchase:\n- **Standard Down Payment**: 20% down (e.g., on a $500,000 property = $100,000 down payment).\n- **Estimated Interest Rate**: 6.5% - 7.5% per annum.\n- **Estimated Monthly Payment (30-year fixed on $400k loan)**: ~$2,528 / month (principal + interest).\n- **Flexible Developer Payment Plans**: Available with 10% down and 3 to 5-year easy installments for new off-plan projects!\n\nWould you like a custom mortgage estimate for a specific property?`
+      message: `📊 **Down Payment & Mortgage Overview:**\n\n- **Standard Down Payment**: Usually **15% to 25%** of the total property value upfront.\n- **Off-Plan / Installment Projects**: Developers typically offer booking starting at **10% to 15%** down payment, with remaining balance spread over 3 to 5 years (monthly or quarterly installments).\n- **Bank Home Financing**: Banks generally finance up to **70-80%** of the property value, with interest rates typically between **12% to 18%** (KIBOR + spread in Pakistan) or **6.5% - 7.5%** in international markets.\n- **Example**: For a $500,000 / PKR 5 Crore property, a 20% down payment equals $100,000 / PKR 1 Crore.`
     };
   }
 
-  // 4. Rent / Rental Search
-  if (q.includes("rent") || q.includes("kiraya") || q.includes("monthly") || q.includes("tenant")) {
-    const rentalProps = PROPERTIES.filter(p => p.status === "rent");
+  // 4. NOC & Legal Verification
+  if (q.includes("noc") || q.includes("legal") || q.includes("approval") || q.includes("society") || q.includes("verify") || q.includes("cda") || q.includes("lda") || q.includes("sbca")) {
     return {
-      message: `🏢 Here are our top **Rental Properties** currently available for immediate lease. All units include premium maintenance and verified landlord contracts:`,
-      properties: rentalProps
+      message: `🏛️ **How to Verify Property Legal Status & NOC:**\n\n1. **Check Official Authority Portal**: Verify the society's NOC on the official authority website (e.g. CDA/RDA for Islamabad/Rawalpindi, LDA for Lahore, SBCA for Karachi).\n2. **Approved Layout Plan (LOP)**: Ensure the specific block/phase has an approved Layout Plan, not just an initial permission letter.\n3. **Land Title & Registry (Fard/Intiqal)**: Verify the land is legally transferred in the developer's name at the local revenue office (Patwari / Sub-Registrar).\n4. **Utility Connections (Electricity/Gas/Water NOC)**: Confirm NOCs for utility supply lines are obtained.`
     };
   }
 
-  // 5. Luxury Villa / House Search
-  if (q.includes("villa") || q.includes("luxury") || q.includes("bungalow") || q.includes("ghar") || q.includes("house") || q.includes("mansion") || q.includes("kothi")) {
-    const villaProps = PROPERTIES.filter(p => p.type === "villa" || p.type === "house");
+  // 5. Commercial vs Residential ROI & Rental Yield
+  if (q.includes("roi") || q.includes("rental") || q.includes("investment") || q.includes("yield") || q.includes("commercial") || q.includes("residential") || q.includes("profit")) {
     return {
-      message: `🏡 Here are the premier **Luxury Villas & Houses** matching your search criteria:`,
-      properties: villaProps
+      message: `📈 **Commercial vs. Residential Real Estate Comparison:**\n\n| Feature | Commercial (Plazas/Shops) | Residential (Houses/Flats) |\n| :--- | :--- | :--- |\n| **Rental Yield** | **7% - 10%** annually | **3% - 5%** annually |\n| **Capital Appreciation** | Higher in developing business hubs | Steady & consistent |\n| **Lease Duration** | Long-term (3 to 10 years) | Short-term (1 to 2 years) |\n| **Maintenance Cost** | Usually borne by tenant | Borne by landlord |\n| **Initial Budget** | High entry barrier | Flexible options |\n\n**Recommendation**: For immediate passive rental income, commercial shops or corporate offices are optimal; for capital safety and long-term living security, residential plots or houses are preferred.`
     };
   }
 
-  // 6. Apartment / Flat / Studio / Penthouse
-  if (q.includes("apartment") || q.includes("flat") || q.includes("studio") || q.includes("penthouse")) {
-    const aptProps = PROPERTIES.filter(p => p.type === "apartment");
+  // 6. Cities & Rates (Islamabad, Karachi, Lahore)
+  if (q.includes("islamabad") || q.includes("karachi") || q.includes("lahore") || q.includes("dha") || q.includes("bahria") || q.includes("rate") || q.includes("qeemat") || q.includes("price")) {
     return {
-      message: `🏢 Here are modern **Apartments & Penthouses** in prime central locations:`,
-      properties: aptProps
+      message: `🇵🇰 **Top Real Estate Investment Locations & Trends:**\n\n- **Islamabad / Rawalpindi**: High capital appreciation in DHA Islamabad, Bahria Town, Park View City, and B-17 (Multi Gardens).\n- **Lahore**: High rental yields and safety in DHA Phase 6-9, Lake City, and Etihad Town.\n- **Karachi**: Prime commercial demand in Clifton, DHA Phases 5-8, and emerging projects along the Motorway (M-9).\n- **Average Plot Rates**: Residential 1 Kanal plots range from PKR 2.5 Crore to PKR 8+ Crore depending on the sector and development stage.`
     };
   }
 
-  // 7. Plots / Commercial / Investment / ROI
-  if (q.includes("plot") || q.includes("commercial") || q.includes("invest") || q.includes("roi") || q.includes("zameen") || q.includes("karachi") || q.includes("islamabad") || q.includes("lahore") || q.includes("dha") || q.includes("bahria")) {
-    const plotProps = PROPERTIES.filter(p => p.type === "plot" || p.price > 500000);
+  // 7. Schedule / Contact Agent
+  if (q.includes("contact") || q.includes("call") || q.includes("agent") || q.includes("number") || q.includes("phone") || q.includes("visit") || q.includes("schedule") || q.includes("appointment")) {
     return {
-      message: `📈 **High-Yield Real Estate Investment Opportunities**\n\n- **Commercial Plots & Plazas**: Projected Annual Capital Gain: 12% - 18%\n- **Rental Yield**: 6% - 8% in central hubs\n- **Approved Authorities**: NOC Verified & Clear Titles\n\nTake a look at these top investment options:`,
-      properties: plotProps
+      message: `📞 **Real Estate Advisory & Contact Information:**\n\n- **Live Helpline**: +1 (800) 555-REAL / +92 (300) 123-4567\n- **Email Support**: support@estatebot-faq.com\n- **Office Timings**: Monday to Saturday, 9:00 AM - 7:00 PM\n\nYou can ask any specific questions right here in the chat and our AI will assist you immediately!`
     };
   }
 
-  // 8. Roman Urdu Support
-  if (q.includes("chahiye") || q.includes("kharidna") || q.includes("lena hai") || q.includes("rate") || q.includes("qeemat") || q.includes("paisa") || q.includes("kitna")) {
-    return {
-      message: `Ji bilkul! Hamaray paas **Ready to Move Houses**, **Luxury Villas**, **Apartments for Rent**, or **Commercial Plots** available hain.\n\nAap apna **Budget** or **Location** (e.g. Islamabad, Lahore, Karachi ya Downtown) bataiye, taake main aapko best options dikha sakoon:`,
-      properties: PROPERTIES.slice(0, 3)
-    };
-  }
-
-  // Default Smart Fallback
+  // Default Smart Fallback FAQ response
   return {
-    message: `I found several matching listings based on your request: "${rawQuery}". You can refine your search by asking for **budget** (e.g., *under $500,000*), **type** (*villa, apartment, plot*), or **rent vs buy**.`,
-    properties: PROPERTIES.slice(0, 3)
+    message: `Thank you for your question: **"${rawQuery}"**.\n\nOur Real Estate Knowledge Base covers property legalities, mortgage rates, developer installment plans, and market pricing.\n\nCould you please specify if you are looking for **buying advice**, **financing/down payment details**, or **legal/NOC verification**?`
   };
 }
-
-// Interactive Card Handlers
-window.handleCardClick = function(propId) {
-  const prop = PROPERTIES.find(p => p.id === propId);
-  if (prop) {
-    const query = `Tell me more about ${prop.title}`;
-    addUserMessage(query);
-    processUserQuery(query);
-  }
-};
-
-window.sendPropertyInquiry = function(propId) {
-  handleCardClick(propId);
-};
-
-// Booking Modal Logic
-window.openBookingModal = function(propId) {
-  const prop = PROPERTIES.find(p => p.id === propId);
-  if (!prop) return;
-  currentBookingProperty = prop;
-  bookingPropertyTitle.textContent = `${prop.title} (${prop.formattedPrice})`;
-  
-  const today = new Date().toISOString().split('T')[0];
-  const dateInput = document.getElementById("book-date");
-  if (dateInput) {
-    dateInput.min = today;
-    dateInput.value = today;
-  }
-  
-  bookingModal.classList.remove("hidden");
-};
-
-btnCloseBooking.addEventListener("click", () => {
-  bookingModal.classList.add("hidden");
-});
-
-bookingForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  const name = document.getElementById("book-name").value.trim();
-  const phone = document.getElementById("book-phone").value.trim();
-  const date = document.getElementById("book-date").value;
-  const notes = document.getElementById("book-notes").value.trim();
-
-  bookingModal.classList.add("hidden");
-  bookingForm.reset();
-
-  // Send tour booking event to n8n webhook
-  if (state.engine === "webhook" && state.webhookUrl) {
-    try {
-      fetch(state.webhookUrl, {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          event: "tour_booking_lead",
-          sessionId: state.sessionId,
-          name,
-          phone,
-          date,
-          notes,
-          property: currentBookingProperty
-        })
-      }).catch(err => console.warn("Lead webhook ping failed:", err));
-    } catch(e) {}
-  }
-
-  // Confirmation in Chat
-  setTimeout(() => {
-    sendBotMessage(`🎉 **Viewing Tour Confirmed!**\n\nThank you **${name}**! Your property tour request for **${currentBookingProperty.title}** has been scheduled for **${date}**.\n\nOur verified real estate specialist will contact you on **${phone}** 2 hours prior to confirm arrangements. Notes saved: *"${notes || 'None'}"*`);
-  }, 400);
-});
 
 // Clear Chat
 btnClearChat.addEventListener("click", () => {
@@ -704,7 +479,7 @@ async function callOpenAI(prompt) {
   const messages = [
     {
       role: "system",
-      content: `You are EstateBot, an expert, enthusiastic, and polite real estate AI assistant. Answer questions about property buying, renting, pricing, mortgage calculations, location recommendations, and viewing appointments. Keep answers concise, nicely formatted with bullet points and bold highlights.`
+      content: `You are EstateBot, an expert real estate AI FAQ assistant. Answer questions about property buying, documentation, pricing, NOC legalities, mortgage calculations, and investment ROI. Provide clear, concise answers formatted with bullet points and bold text.`
     },
     ...state.chatHistory.slice(-4).map(m => ({ role: m.role, content: m.content })),
     { role: "user", content: prompt }
@@ -737,7 +512,7 @@ async function callGemini(prompt) {
     body: JSON.stringify({
       contents: [{
         parts: [{
-          text: `You are EstateBot, a professional real estate assistant. User message: ${prompt}. Provide helpful advice with bullet points, pricing guidelines, or property suggestions.`
+          text: `You are EstateBot, a professional real estate FAQ assistant. User question: ${prompt}. Provide helpful advice with bullet points, pricing guidelines, or legal documentation details.`
         }]
       }]
     })
