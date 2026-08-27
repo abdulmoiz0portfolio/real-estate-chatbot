@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64">
+  <defs>
+    <linearGradient id="estateGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#059669" />
+      <stop offset="100%" stop-color="#34d399" />
+    </linearGradient>
+    <filter id="glow" x="-20%" y="-20%" width="140%" height="140%">
+      <feDropShadow dx="0" dy="4" stdDeviation="4" flood-color="#10b981" flood-opacity="0.35"/>
+    </filter>
+  </defs>
+
+  <!-- Background circle/rounded rect -->
+  <rect width="64" height="64" rx="16" fill="#0f172a" stroke="#334155" stroke-width="1.5" />
+
+  <!-- Modern stylized Real Estate Building & Roof with gradient -->
+  <g filter="url(#glow)">
+    <!-- House Roof -->
+    <path d="M14 29 L32 14 L50 29 L46 29 L32 18 L18 29 Z" fill="url(#estateGrad)" />
+    
+    <!-- Chimney -->
+    <path d="M41 18 L46 18 L46 25 L41 21 Z" fill="#10b981" />
+
+    <!-- Main Building Body -->
+    <rect x="20" y="27" width="24" height="24" rx="3" fill="#1e293b" stroke="#34d399" stroke-width="2" />
+
+    <!-- Windows / Grid -->
+    <rect x="24" y="31" width="6" height="6" rx="1" fill="#34d399" />
+    <rect x="34" y="31" width="6" height="6" rx="1" fill="#34d399" />
+
+    <!-- Modern Door -->
+    <path d="M28 51 L28 42 C28 40.5 30 40 32 40 C34 40 36 40.5 36 42 L36 51 Z" fill="url(#estateGrad)" />
+    <circle cx="34" cy="46" r="0.8" fill="#0f172a" />
+  </g>
+</svg>
