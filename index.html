@@ -30,13 +30,10 @@
       </div>
 
       <div class="flex items-center gap-2 sm:gap-3">
-        <span id="ai-engine-badge" class="px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-medium flex items-center gap-1.5">
-          <i class="fa-solid fa-bolt text-amber-400"></i>
-          <span>n8n Webhook</span>
+        <span class="px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-medium flex items-center gap-1.5">
+          <i class="fa-solid fa-circle-check text-emerald-400 text-[10px]"></i>
+          <span>Online</span>
         </span>
-        <button id="btn-api-modal" title="Settings / Webhook" class="p-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-slate-700 text-slate-300 text-xs transition-all">
-          <i class="fa-solid fa-sliders text-amber-400"></i>
-        </button>
         <button id="btn-clear-chat" title="Clear Chat History" class="p-2 rounded-lg border border-slate-700 bg-slate-800/80 hover:bg-rose-500/20 hover:border-rose-500/40 hover:text-rose-400 text-slate-300 text-xs transition-all">
           <i class="fa-solid fa-trash-can"></i>
         </button>
@@ -115,54 +112,6 @@
       </div>
     </div>
   </main>
-
-  <!-- Webhook / Settings Modal -->
-  <div id="api-modal" class="fixed inset-0 z-50 bg-black/70 backdrop-blur-sm hidden flex items-center justify-center p-4">
-    <div class="bg-slate-900 border border-slate-800 rounded-2xl max-w-md w-full p-6 shadow-2xl relative">
-      <button id="btn-close-modal" class="absolute top-4 right-4 text-slate-400 hover:text-white">
-        <i class="fa-solid fa-xmark text-lg"></i>
-      </button>
-      
-      <div class="flex items-center gap-3 mb-4">
-        <div class="w-10 h-10 rounded-xl bg-amber-500/10 border border-amber-500/30 flex items-center justify-center text-amber-400">
-          <i class="fa-solid fa-sliders"></i>
-        </div>
-        <div>
-          <h3 class="text-base font-bold text-white">PropertyBot Configuration</h3>
-          <p class="text-xs text-slate-400">Manage Webhook & AI Model</p>
-        </div>
-      </div>
-
-      <div class="space-y-4">
-        <div>
-          <label class="block text-xs font-semibold text-slate-300 mb-1">Engine Mode</label>
-          <select id="engine-select" class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-            <option value="webhook" selected>n8n AI Webhook (Live)</option>
-            <option value="builtin">Built-in PropertyBot Engine (Offline)</option>
-            <option value="openai">OpenAI (GPT-4o-mini)</option>
-            <option value="gemini">Google Gemini API</option>
-          </select>
-        </div>
-
-        <div id="webhook-container">
-          <label class="block text-xs font-semibold text-slate-300 mb-1">n8n Webhook URL</label>
-          <input type="url" id="custom-webhook-url" value="https://n8n.bminternational.com.pk/webhook/6c925c11-65e3-41dd-a8be-2d495f04859c" placeholder="https://..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-          <p class="text-[10px] text-emerald-400 mt-1">✓ Messages are transmitted live to your n8n workflow.</p>
-        </div>
-
-        <div id="api-key-container" class="hidden">
-          <label class="block text-xs font-semibold text-slate-300 mb-1">API Key</label>
-          <input type="password" id="custom-api-key" placeholder="sk-..." class="w-full bg-slate-950 border border-slate-700 rounded-lg px-3 py-2 text-xs text-slate-200 focus:outline-none focus:border-emerald-500">
-        </div>
-
-        <div class="flex justify-end gap-2 pt-2">
-          <button id="btn-save-settings" class="px-4 py-2 rounded-lg bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs transition-all">
-            Save Settings
-          </button>
-        </div>
-      </div>
-    </div>
-  </div>
 
   <script src="app.js"></script>
 </body>

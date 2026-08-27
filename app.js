@@ -10,9 +10,7 @@ function getOrCreateSessionId() {
 
 // App State
 let state = {
-  engine: localStorage.getItem("estatebot_engine") || "webhook",
-  webhookUrl: localStorage.getItem("estatebot_webhook") || "https://n8n.bminternational.com.pk/webhook/6c925c11-65e3-41dd-a8be-2d495f04859c",
-  apiKey: localStorage.getItem("estatebot_apikey") || "",
+  webhookUrl: "https://n8n.bminternational.com.pk/webhook/6c925c11-65e3-41dd-a8be-2d495f04859c",
   sessionId: getOrCreateSessionId(),
   chatHistory: []
 };
@@ -23,22 +21,9 @@ const chatForm = document.getElementById("chat-form");
 const chatInput = document.getElementById("chat-input");
 const btnSend = document.getElementById("btn-send");
 const btnClearChat = document.getElementById("btn-clear-chat");
-const aiEngineBadge = document.getElementById("ai-engine-badge");
-
-// Modals
-const apiModal = document.getElementById("api-modal");
-const btnApiModal = document.getElementById("btn-api-modal");
-const btnCloseModal = document.getElementById("btn-close-modal");
-const engineSelect = document.getElementById("engine-select");
-const webhookContainer = document.getElementById("webhook-container");
-const customWebhookUrlInput = document.getElementById("custom-webhook-url");
-const apiKeyContainer = document.getElementById("api-key-container");
-const customApiKeyInput = document.getElementById("custom-api-key");
-const btnSaveSettings = document.getElementById("btn-save-settings");
 
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
-  initSettings();
   initQuickPrompts();
   
   // Initial Greeting message
@@ -226,53 +211,22 @@ chatForm.addEventListener("submit", (e) => {
   processUserQuery(query);
 });
 
-// Process Query Routing (n8n Webhook / OpenAI / Gemini / Built-in)
+// Process Query Routing (Direct to n8n Webhook / Offline Fallback)
 async function processUserQuery(query) {
   showTypingIndicator();
 
-  // 1. Primary: n8n Webhook
-  if (state.engine === "webhook" && state.webhookUrl) {
-    try {
-      const response = await callN8nWebhook(query);
-      if (response) {
-        sendBotMessage(response);
-        return;
-      }
-    } catch (err) {
-      console.warn("n8n Webhook fetch failed:", err);
-      const fallback = evaluateRealEstateQuery(query);
-      sendBotMessage(`${fallback.message}`);
-      return;
-    }
-  }
-
-  // 2. OpenAI
-  if (state.engine === "openai" && state.apiKey) {
-    try {
-      const response = await callOpenAI(query);
+  try {
+    const response = await callN8nWebhook(query);
+    if (response) {
       sendBotMessage(response);
       return;
-    } catch (err) {
-      console.warn("OpenAI API error, fallback:", err);
     }
-  } 
-  
-  // 3. Gemini
-  else if (state.engine === "gemini" && state.apiKey) {
-    try {
-      const response = await callGemini(query);
-      sendBotMessage(response);
-      return;
-    } catch (err) {
-      console.warn("Gemini API error, fallback:", err);
-    }
+  } catch (err) {
+    console.warn("n8n Webhook fetch notice:", err);
+    const fallback = evaluateRealEstateQuery(query);
+    sendBotMessage(`${fallback.message}`);
+    return;
   }
-
-  // 4. Built-in Offline Engine
-  setTimeout(() => {
-    const result = evaluateRealEstateQuery(query);
-    sendBotMessage(result.message);
-  }, 400);
 }
 
 // n8n Webhook Request
@@ -415,109 +369,3 @@ btnClearChat.addEventListener("click", () => {
     sendWelcomeMessage();
   }
 });
-
-// Settings Modal Logic
-btnApiModal.addEventListener("click", () => {
-  apiModal.classList.remove("hidden");
-  engineSelect.value = state.engine;
-  customWebhookUrlInput.value = state.webhookUrl;
-  customApiKeyInput.value = state.apiKey;
-  toggleConfigFields();
-});
-
-btnCloseModal.addEventListener("click", () => {
-  apiModal.classList.add("hidden");
-});
-
-engineSelect.addEventListener("change", toggleConfigFields);
-
-function toggleConfigFields() {
-  const val = engineSelect.value;
-  if (val === "webhook") {
-    webhookContainer.classList.remove("hidden");
-    apiKeyContainer.classList.add("hidden");
-  } else if (val === "openai" || val === "gemini") {
-    webhookContainer.classList.add("hidden");
-    apiKeyContainer.classList.remove("hidden");
-  } else {
-    webhookContainer.classList.add("hidden");
-    apiKeyContainer.classList.add("hidden");
-  }
-}
-
-btnSaveSettings.addEventListener("click", () => {
-  state.engine = engineSelect.value;
-  state.webhookUrl = customWebhookUrlInput.value.trim();
-  state.apiKey = customApiKeyInput.value.trim();
-  
-  localStorage.setItem("estatebot_engine", state.engine);
-  localStorage.setItem("estatebot_webhook", state.webhookUrl);
-  localStorage.setItem("estatebot_apikey", state.apiKey);
-
-  updateEngineBadge();
-  apiModal.classList.add("hidden");
-  sendBotMessage(`Settings update ho gayi hain! Active Engine: **${state.engine.toUpperCase()}**`);
-});
-
-function initSettings() {
-  updateEngineBadge();
-}
-
-function updateEngineBadge() {
-  if (state.engine === "webhook") {
-    aiEngineBadge.innerHTML = `<i class="fa-solid fa-bolt text-amber-400"></i><span>n8n Webhook</span>`;
-    aiEngineBadge.className = "px-2.5 py-1 rounded-full bg-amber-500/10 border border-amber-500/30 text-amber-400 text-[11px] font-medium flex items-center gap-1.5";
-  } else if (state.engine === "builtin") {
-    aiEngineBadge.innerHTML = `<i class="fa-solid fa-house-chimney-user text-emerald-400"></i><span>PropertyBot</span>`;
-    aiEngineBadge.className = "px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/30 text-emerald-400 text-[11px] font-medium flex items-center gap-1.5";
-  } else {
-    aiEngineBadge.innerHTML = `<i class="fa-solid fa-cloud text-blue-400"></i><span>${state.engine.toUpperCase()} Live</span>`;
-    aiEngineBadge.className = "px-2.5 py-1 rounded-full bg-blue-500/10 border border-blue-500/30 text-blue-400 text-[11px] font-medium flex items-center gap-1.5";
-  }
-}
-
-// External OpenAI LLM Call
-async function callOpenAI(prompt) {
-  const messages = [
-    { role: "system", content: "You are PropertyBot, a friendly and professional real estate consultant for Pakistan properties. Keep answers concise, polite, and in Roman Urdu / English." },
-    ...state.chatHistory.slice(-4).map(m => ({ role: m.role, content: m.content })),
-    { role: "user", content: prompt }
-  ];
-
-  const res = await fetch("https://api.openai.com/v1/chat/completions", {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${state.apiKey}`
-    },
-    body: JSON.stringify({
-      model: "gpt-4o-mini",
-      messages: messages,
-      temperature: 0.7
-    })
-  });
-
-  if (!res.ok) throw new Error(`OpenAI API error: ${res.status}`);
-  const data = await res.json();
-  return data.choices[0].message.content;
-}
-
-// External Google Gemini LLM Call
-async function callGemini(prompt) {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${state.apiKey}`;
-  const res = await fetch(url, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({
-      contents: [{
-        parts: [{
-          text: prompt
-        }]
-      }]
-    })
-  });
-
-  if (!res.ok) throw new Error(`Gemini API error: ${res.status}`);
-  const data = await res.json();
-  return data.candidates[0].content.parts[0].text;
-}
