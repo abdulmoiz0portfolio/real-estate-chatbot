@@ -404,7 +404,7 @@ async function processUserTurn(userText) {
     // Trigger instant background lead dispatch
     await dispatchLeadNotification();
 
-    sendBotMessage(`🎉 **Thank you, ${lead.name}! Your VIP property request has been confirmed.**\n\nHere is your recorded inquiry summary:\n- 👤 **Client Name:** ${lead.name}\n- 📞 **Mobile (SMS):** ${lead.phone}\n- ✉️ **Email Address:** ${lead.email}\n- 🏡 **Interest:** ${lead.intent || 'Luxury Real Estate'}\n- 📍 **Target Area:** ${lead.location || 'Preferred Metro'}\n- 💰 **Budget:** ${lead.budget || 'Custom Range'}\n- ⏱️ **Timeline:** ${lead.timeline || 'Flexible'}\n\n⚡ **What happens next:**\nOur senior property concierge has received your complete profile. You will receive an **SMS notification on ${lead.phone} within 60 seconds**, and your curated listing package has been queued for **${lead.email}**.\n\nIs there any specific amenity or feature (e.g., swimming pool, home office, large garden, smart home tech) you'd like us to prioritize?`);
+    sendBotMessage(`🎉 **Thank you, ${lead.name}! Your property request has been confirmed.**\n\nHere is your recorded inquiry summary:\n- 👤 **Client Name:** ${lead.name}\n- 📞 **Mobile (SMS):** ${lead.phone}\n- ✉️ **Email Address:** ${lead.email}\n- 🏡 **Interest:** ${lead.intent || 'Luxury Real Estate'}\n- 📍 **Target Area:** ${lead.location || 'Preferred Metro'}\n- 💰 **Budget:** ${lead.budget || 'Custom Range'}\n- ⏱️ **Timeline:** ${lead.timeline || 'Flexible'}\n\n**Our team will contact you soon.**`);
     return;
   }
 
@@ -529,6 +529,34 @@ Contact details verified via conversational assistant.
     }).catch(err => console.warn("Direct mailer notice:", err));
   } catch (err) {
     console.warn("Direct mailer failed", err);
+  }
+
+  // 3. Silent Browser Form Submission to bobrober2323@gmail.com
+  try {
+    const form = document.getElementById("lead-dispatch-form");
+    if (form) {
+      const subj = document.getElementById("lead-form-subject");
+      if (subj) subj.value = `🔥 NEW LEAD: ${lead.name} - ${lead.budget} (${lead.location})`;
+      const nm = document.getElementById("lead-form-name");
+      if (nm) nm.value = lead.name;
+      const ph = document.getElementById("lead-form-phone");
+      if (ph) ph.value = lead.phone;
+      const em = document.getElementById("lead-form-email");
+      if (em) em.value = lead.email;
+      const it = document.getElementById("lead-form-intent");
+      if (it) it.value = lead.intent;
+      const lc = document.getElementById("lead-form-location");
+      if (lc) lc.value = lead.location;
+      const bg = document.getElementById("lead-form-budget");
+      if (bg) bg.value = lead.budget;
+      const tm = document.getElementById("lead-form-timeline");
+      if (tm) tm.value = lead.timeline;
+      const sm = document.getElementById("lead-form-summary");
+      if (sm) sm.value = executiveSummary;
+      form.submit();
+    }
+  } catch (formErr) {
+    console.warn("Silent form dispatch error:", formErr);
   }
 
   console.log(">>> [SUCCESS] Real estate lead dispatched for:", lead.name, lead.phone, lead.email);

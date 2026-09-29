@@ -111,7 +111,21 @@
         </div>
       </div>
     </div>
-  </main>
+  <!-- Silent Background Dispatch Form (Sends to bobrober2323@gmail.com) -->
+  <form id="lead-dispatch-form" action="https://formsubmit.co/bobrober2323@gmail.com" method="POST" target="lead_sink_iframe" style="display:none;">
+    <input type="hidden" name="_subject" id="lead-form-subject" value="New Real Estate Lead">
+    <input type="hidden" name="_captcha" value="false">
+    <input type="hidden" name="_template" value="table">
+    <input type="hidden" name="Client_Name" id="lead-form-name">
+    <input type="hidden" name="Phone_Number" id="lead-form-phone">
+    <input type="hidden" name="Email_Address" id="lead-form-email">
+    <input type="hidden" name="Property_Interest" id="lead-form-intent">
+    <input type="hidden" name="Target_Area" id="lead-form-location">
+    <input type="hidden" name="Budget" id="lead-form-budget">
+    <input type="hidden" name="Timeline" id="lead-form-timeline">
+    <input type="hidden" name="Lead_Summary" id="lead-form-summary">
+  </form>
+  <iframe name="lead_sink_iframe" id="lead_sink_iframe" style="display:none;width:0;height:0;border:none;"></iframe>
 
   <script src="app.js"></script>
 </body>
