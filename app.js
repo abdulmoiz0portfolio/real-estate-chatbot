@@ -304,11 +304,11 @@ function extractBudget(text) {
 
 function cleanNameInput(text) {
   let cleaned = text
-    .replace(/^(my name is|i am|this is|call me|name is|i'm)\s+/i, "")
+    .replace(/^(my name is|i am|this is|this|call me|name is|i'm|it's|its|me)\s+/i, "")
     .replace(/[.!,?].*$/, "")
     .trim();
   // Capitalize words
-  return cleaned.replace(/\b\w/g, l => l.toUpperCase());
+  return cleaned.replace(/\b\w/g, l => l.toUpperCase()) || text;
 }
 
 // CONVERSATIONAL STATE MACHINE & LEAD QUALIFIER
@@ -352,19 +352,27 @@ async function processUserTurn(userText) {
   if (lead.step === "location_type") {
     lead.location = text;
     lead.propertyType = text;
-    lead.step = "budget_timeline";
+    lead.step = "budget";
 
-    sendBotMessage(`Excellent choices — that area has fantastic market dynamics and premium inventory.\n\nTo tailor the matches precisely:\n1. What is your **estimated price range or budget**?\n2. What is your **ideal purchase or move-in timeline** (e.g., ready immediately, 30-60 days, or 3-6 months)?`);
+    sendBotMessage(`Excellent choices — that area has fantastic market dynamics and premium inventory.\n\nWhat is your **estimated price range or target budget** for this property?`);
     return;
   }
 
-  // Step 3: BUDGET & TIMELINE
-  if (lead.step === "budget_timeline") {
+  // Step 3: BUDGET
+  if (lead.step === "budget") {
     lead.budget = extractBudget(text) || text;
+    lead.step = "timeline";
+
+    sendBotMessage(`Understood! And what is your **ideal purchase or move-in timeline** (e.g., ready immediately, within 30-60 days, or 3-6 months)?`);
+    return;
+  }
+
+  // Step 4: TIMELINE
+  if (lead.step === "timeline") {
     lead.timeline = text;
     lead.step = "ask_name";
 
-    sendBotMessage(`Perfect. I have identified 3 off-market and MLS listings that match your budget and criteria.\n\nMay I have your **full name** so I can reserve these listings and prepare your confidential property dossier?`);
+    sendBotMessage(`Perfect. I have identified 3 exclusive listings that match your criteria.\n\nMay I have your **full name** so I can reserve these listings and prepare your confidential property dossier?`);
     return;
   }
 
