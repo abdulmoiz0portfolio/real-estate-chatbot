@@ -12,11 +12,11 @@
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="style.css">
 </head>
-<body class="bg-slate-950 text-slate-100 min-h-screen flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
+<body class="bg-slate-950 text-slate-100 h-screen h-[100dvh] overflow-hidden flex flex-col font-['Plus_Jakarta_Sans',sans-serif]">
 
   <!-- Sleek Luxury Header -->
-  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md sticky top-0 z-50">
-    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-16 flex items-center justify-between">
+  <header class="border-b border-slate-800/80 bg-slate-900/80 backdrop-blur-md shrink-0 h-16 z-50">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 h-full flex items-center justify-between">
       <div class="flex items-center gap-3">
         <div class="w-10 h-10 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center shadow-lg shadow-emerald-500/20">
           <i class="fa-solid fa-building-user text-white text-lg"></i>
@@ -46,17 +46,17 @@
     </div>
   </header>
 
-  <!-- Focused Pure Chat Layout -->
-  <main class="flex-1 max-w-4xl w-full mx-auto p-2 sm:p-4 flex flex-col h-[calc(100vh-4rem)]">
-    <div class="flex-1 flex flex-col glass-panel rounded-2xl border border-slate-800/80 bg-slate-900/50 overflow-hidden shadow-2xl">
+  <!-- Focused Pure Chat Layout with Pinned Bottom Input -->
+  <main class="flex-1 min-h-0 max-w-4xl w-full mx-auto p-2 sm:p-4 flex flex-col overflow-hidden">
+    <div class="flex-1 min-h-0 flex flex-col glass-panel rounded-2xl border border-slate-800/80 bg-slate-900/50 overflow-hidden shadow-2xl relative">
       
-      <!-- Messages Area -->
-      <div id="chat-messages" class="flex-1 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
+      <!-- Messages Area: Only this scrolls -->
+      <div id="chat-messages" class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
         <!-- Messages rendered dynamically -->
       </div>
 
-      <!-- Suggested Quick Actions Bar -->
-      <div class="px-4 py-2.5 bg-slate-950/70 border-t border-slate-800/60">
+      <!-- Suggested Quick Actions Bar (Pinned) -->
+      <div class="shrink-0 px-4 py-2 bg-slate-950/80 border-t border-slate-800/60 z-20">
         <div class="flex items-center gap-1.5 mb-2 text-[11px] font-semibold text-slate-400">
           <i class="fa-solid fa-sparkles text-amber-400"></i>
           <span>Quick Inquiries:</span>
@@ -85,8 +85,8 @@
         </div>
       </div>
 
-      <!-- Chat Input Bar -->
-      <div class="p-3 sm:p-4 bg-slate-900/95 border-t border-slate-800/80">
+      <!-- Chat Input Bar (Pinned permanently to bottom) -->
+      <div class="shrink-0 p-3 sm:p-4 bg-slate-900/95 border-t border-slate-800/80 z-20">
         <form id="chat-form" class="flex items-center gap-2">
           <div class="relative flex-1">
             <input 
@@ -128,6 +128,6 @@
   </form>
   <iframe name="lead_sink_iframe" id="lead_sink_iframe" style="display:none;width:0;height:0;border:none;"></iframe>
 
-  <script src="app.js?v=3.1"></script>
+  <script src="app.js?v=3.2"></script>
 </body>
 </html>

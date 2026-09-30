@@ -1,3 +1,12 @@
+/* Viewport & Layout Lock (Pins input bar permanently) */
+html, body {
+  height: 100%;
+  height: 100dvh;
+  margin: 0;
+  padding: 0;
+  overflow: hidden;
+}
+
 /* Glassmorphism & Custom Accents */
 .glass-panel {
   background: rgba(15, 23, 42, 0.65);
