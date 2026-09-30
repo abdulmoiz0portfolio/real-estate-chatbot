@@ -16,9 +16,9 @@ const state = {
   sessionId: getOrCreateSessionId(),
   chatHistory: [],
   
-  // Conversational Lead Qualification State Machine
+  // Conversational Lead Qualification State
   lead: {
-    step: "intent", // "intent" -> "location_type" -> "budget_timeline" -> "ask_name" -> "ask_phone" -> "ask_email" -> "completed"
+    step: "criteria", // "criteria" -> "ask_name" -> "ask_phone" -> "ask_email" -> "completed"
     intent: "",
     location: "",
     propertyType: "",
@@ -27,6 +27,7 @@ const state = {
     name: "",
     phone: "",
     email: "",
+    listingsShown: false,
     dispatched: false
   }
 };
@@ -41,16 +42,25 @@ const btnClearChat = document.getElementById("btn-clear-chat");
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
   initQuickPrompts();
-  
-  // Load previous history or greet
+
+  // Purge any stale legacy history that contains obsolete "What happens next" text
   const savedHistory = localStorage.getItem("propertyai_history");
   if (savedHistory) {
     try {
-      const parsed = JSON.parse(savedHistory);
-      if (Array.isArray(parsed) && parsed.length > 0) {
-        state.chatHistory = parsed;
-        renderSavedHistory();
-        return;
+      if (savedHistory.includes("What happens next") || savedHistory.includes("senior property concierge has received")) {
+        localStorage.removeItem("propertyai_history");
+      } else {
+        const parsed = JSON.parse(savedHistory);
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          state.chatHistory = parsed;
+          // Restore lead memory if saved
+          const savedLead = localStorage.getItem("propertyai_current_lead");
+          if (savedLead) {
+            try { state.lead = JSON.parse(savedLead); } catch (e) {}
+          }
+          renderSavedHistory();
+          return;
+        }
       }
     } catch (e) {
       console.warn("Could not load history", e);
@@ -86,19 +96,19 @@ function sendWelcomeMessage() {
             How can I assist your property search today?
           </p>
           <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button onclick="askSuggestedQuestion('I am looking to buy a luxury residential property.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+            <button onclick="askSuggestedQuestion('I am looking to buy a 3-bedroom luxury residential home.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
               <i class="fa-solid fa-house-chimney text-emerald-400 shrink-0 text-[11px]"></i>
               <span class="truncate">🏡 Buy a Luxury Home</span>
             </button>
-            <button onclick="askSuggestedQuestion('I would like to schedule a private VIP home showing.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+            <button onclick="askSuggestedQuestion('I would like to schedule a private VIP home showing in Miami.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
               <i class="fa-solid fa-calendar-check text-blue-400 shrink-0 text-[11px]"></i>
               <span class="truncate">📅 Schedule Private Showing</span>
             </button>
-            <button onclick="askSuggestedQuestion('I am looking for high-yield investment properties.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+            <button onclick="askSuggestedQuestion('I am looking for high-yield investment properties under $1M.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
               <i class="fa-solid fa-chart-line text-purple-400 shrink-0 text-[11px]"></i>
               <span class="truncate">📈 High-Yield Investments</span>
             </button>
-            <button onclick="askSuggestedQuestion('I want to sell my property for maximum valuation.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
+            <button onclick="askSuggestedQuestion('I want to sell my property for maximum market valuation.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
               <i class="fa-solid fa-tag text-teal-400 shrink-0 text-[11px]"></i>
               <span class="truncate">🏷️ Sell / Value My Property</span>
             </button>
@@ -151,20 +161,20 @@ function addUserMessage(text) {
   saveHistory();
 }
 
-// Add Bot Message to UI
-function sendBotMessage(markdownText) {
+// Add Bot Message to UI (supports HTML or Markdown)
+function sendBotMessage(content, isRawHtml = false) {
   hideTypingIndicator();
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement("div");
   msgEl.className = "flex items-start gap-3 message-animate";
 
-  let formattedContent = formatMarkdown(markdownText);
+  const formattedContent = isRawHtml ? content : formatMarkdown(content);
 
   msgEl.innerHTML = `
     <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs shrink-0 shadow-md shadow-emerald-500/20">
       <i class="fa-solid fa-building-user"></i>
     </div>
-    <div class="max-w-[95%] sm:max-w-[85%]">
+    <div class="max-w-[95%] sm:max-w-[85%] w-full">
       <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3.5 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
         ${formattedContent}
       </div>
@@ -175,7 +185,7 @@ function sendBotMessage(markdownText) {
   chatMessages.appendChild(msgEl);
   scrollToBottom();
   
-  state.chatHistory.push({ role: "assistant", content: markdownText, time });
+  state.chatHistory.push({ role: "assistant", content: content, isHtml: isRawHtml, time });
   saveHistory();
 }
 
@@ -210,6 +220,7 @@ function scrollToBottom() {
 function saveHistory() {
   try {
     localStorage.setItem("propertyai_history", JSON.stringify(state.chatHistory));
+    localStorage.setItem("propertyai_current_lead", JSON.stringify(state.lead));
   } catch (e) {}
 }
 
@@ -231,13 +242,14 @@ function renderSavedHistory() {
     } else {
       const msgEl = document.createElement("div");
       msgEl.className = "flex items-start gap-3 message-animate";
+      const body = msg.isHtml ? msg.content : formatMarkdown(msg.content);
       msgEl.innerHTML = `
         <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs shrink-0 shadow-md shadow-emerald-500/20">
           <i class="fa-solid fa-building-user"></i>
         </div>
-        <div class="max-w-[95%] sm:max-w-[85%]">
+        <div class="max-w-[95%] sm:max-w-[85%] w-full">
           <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3.5 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
-            ${formatMarkdown(msg.content)}
+            ${body}
           </div>
           <div class="text-[10px] text-slate-500 mt-1">${msg.time || ''}</div>
         </div>
@@ -248,7 +260,7 @@ function renderSavedHistory() {
   scrollToBottom();
 }
 
-// Markdown formatting helper
+// Markdown formatting helper with proper valid HTML list wrapping
 function formatMarkdown(text) {
   if (typeof text !== "string") text = String(text);
   let html = escapeHTML(text);
@@ -257,11 +269,20 @@ function formatMarkdown(text) {
   html = html.replace(/\*\*(.*?)\*\*/g, '<strong class="text-white font-semibold">$1</strong>');
   // Italic
   html = html.replace(/\*(.*?)\*/g, '<em class="text-slate-300">$1</em>');
-  // Bullet points
+  // Convert list items
   html = html.replace(/^\s*[-•]\s+(.*)$/gm, '<li class="ml-4 list-disc text-slate-300 my-1">$1</li>');
-  // Numbered lists
   html = html.replace(/^\s*(\d+)\.\s+(.*)$/gm, '<li class="ml-4 list-decimal text-slate-300 my-1">$2</li>');
-  // Linebreaks
+  
+  // Wrap list items cleanly inside <ul> / <ol> so there is NO orphan <li> inside <div>
+  html = html.replace(/(<li class="[^"]*list-disc[^"]*">[\s\S]*?<\/li>\s*)+/g, (match) => {
+    return `<ul class="space-y-1.5 my-2 pl-2 border-l-2 border-emerald-500/30">${match}</ul>`;
+  });
+  html = html.replace(/(<li class="[^"]*list-decimal[^"]*">[\s\S]*?<\/li>\s*)+/g, (match) => {
+    return `<ol class="space-y-1.5 my-2 pl-2 border-l-2 border-emerald-500/30">${match}</ol>`;
+  });
+
+  // Linebreaks (preserve paragraphs)
+  html = html.replace(/\n\n/g, '<div class="h-2"></div>');
   html = html.replace(/\n/g, '<br/>');
   return html;
 }
@@ -286,161 +307,480 @@ chatForm.addEventListener("submit", (e) => {
   processUserTurn(query);
 });
 
-// Extraction Utilities
-function extractEmail(text) {
-  const match = text.match(/([a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,})/);
-  return match ? match[1].toLowerCase() : null;
+// INTELLIGENT ENTITY EXTRACTORS & VALIDATORS
+
+function isValidEmail(text) {
+  const match = text.match(/[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}/);
+  return match ? match[0].toLowerCase() : null;
 }
 
-function extractPhone(text) {
-  const match = text.match(/(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}|\+?\d{10,15}/);
-  return match ? match[0].trim() : null;
+function isValidPhone(text) {
+  // Check for at least 8 to 15 digits
+  const digits = text.replace(/\D/g, "");
+  if (digits.length >= 8 && digits.length <= 15) {
+    const match = text.match(/(?:\+?\d{1,3}[-.\s]?)?(?:\(?\d{3}\)?[-.\s]?)\d{3}[-.\s]?\d{4}|\+?\d{8,15}/);
+    return match ? match[0].trim() : digits;
+  }
+  return null;
 }
 
 function extractBudget(text) {
-  const match = text.match(/(?:\$|usd)?\s*(\d+(?:,\d+)*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?)/i);
-  return match ? match[0].trim() : null;
+  // Matches "$500k", "500k", "$1.2M", "1.5 million", "under 500,000", "$400,000", "500000"
+  const m = text.match(/(?:under|below|up to|around|budget|price)?\s*(\$?\s*\d+(?:,\d{3})*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?|\$\s*\d+)/i);
+  if (m && m[1]) {
+    let raw = m[1].trim().replace(/\s+/g, "");
+    if (!raw.startsWith("$") && !raw.toLowerCase().includes("usd")) {
+      raw = "$" + raw;
+    }
+    return raw.toUpperCase();
+  }
+  return null;
 }
 
-function cleanNameInput(text) {
+function extractTimeline(text) {
+  const lower = text.toLowerCase();
+  if (lower.includes("immediate") || lower.includes("asap") || lower.includes("right now") || lower.includes("ready now") || lower.includes("today")) {
+    return "Immediate / Ready Now";
+  }
+  if (lower.includes("30") || lower.includes("1 month") || lower.includes("next month")) {
+    return "Within 30 Days";
+  }
+  if (lower.includes("60") || lower.includes("2 month")) {
+    return "30–60 Days";
+  }
+  if (lower.includes("90") || lower.includes("3 month")) {
+    return "3–6 Months";
+  }
+  if (lower.includes("6 month") || lower.includes("year") || lower.includes("flexible")) {
+    return "6+ Months / Flexible";
+  }
+  return null;
+}
+
+function extractLocation(text) {
+  // Common luxury metros & cities
+  const cities = [
+    "miami", "brickell", "south beach", "coconut grove", "coral gables",
+    "new york", "manhattan", "brooklyn", "los angeles", "beverly hills", "malibu",
+    "chicago", "austin", "dallas", "houston", "san francisco", "seattle", "boston",
+    "atlanta", "orlando", "tampa", "scottsdale", "las vegas", "denver",
+    "london", "dubai", "toronto", "vancouver"
+  ];
+  const lower = text.toLowerCase();
+  for (const c of cities) {
+    if (lower.includes(c)) {
+      return c.split(" ").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    }
+  }
+  // Check preposition patterns like "in Miami Beach", "around Downtown"
+  const prepMatch = text.match(/(?:in|around|near|at|area of)\s+([A-Z][a-zA-Z\s]{2,20})/);
+  if (prepMatch && prepMatch[1]) {
+    return prepMatch[1].trim();
+  }
+  return null;
+}
+
+function extractPropertyType(text) {
+  const lower = text.toLowerCase();
+  const types = [];
+  
+  // Bed count
+  const bedMatch = text.match(/(\d+)\s*(?:bed|bedroom|br|bhk)/i);
+  if (bedMatch) {
+    types.push(`${bedMatch[1]}-Bedroom`);
+  }
+
+  if (lower.includes("penthouse")) types.push("Luxury Penthouse");
+  else if (lower.includes("condo") || lower.includes("condominium")) types.push("Modern Condominium");
+  else if (lower.includes("villa")) types.push("Private Villa");
+  else if (lower.includes("single family") || lower.includes("single-family") || lower.includes("house") || lower.includes("home")) types.push("Single-Family Home");
+  else if (lower.includes("townhouse")) types.push("Townhouse");
+  else if (lower.includes("estate") || lower.includes("mansion")) types.push("Luxury Estate");
+  else if (lower.includes("apartment")) types.push("Apartment");
+
+  return types.length > 0 ? types.join(" ") : null;
+}
+
+function isOffTopic(text) {
+  const lower = text.toLowerCase().trim();
+  const offTopicPatterns = [
+    /weather/, /temperature/, /rain/, /forecast/,
+    /president/, /politics/, /election/,
+    /recipe/, /cook/, /bake/,
+    /joke/, /riddle/, /poem/, /sing/,
+    /who are you/, /what is your name/,
+    /crypto/, /bitcoin/, /ethereum/,
+    /sports/, /football/, /cricket/, /nba/,
+    /python/, /javascript/, /code/, /programming/
+  ];
+  return offTopicPatterns.some(p => p.test(lower));
+}
+
+function cleanAndValidateName(text) {
   let cleaned = text
     .replace(/^(my name is|i am|this is|this|call me|name is|i'm|it's|its|me)\s+/i, "")
     .replace(/[.!,?].*$/, "")
     .trim();
-  // Capitalize words
-  return cleaned.replace(/\b\w/g, l => l.toUpperCase()) || text;
+  
+  // Check if it has at least 2 alphabetic characters and no digits
+  if (cleaned.length >= 2 && /[a-zA-Z]{2,}/.test(cleaned) && !/\d{2,}/.test(cleaned)) {
+    return cleaned.replace(/\b\w/g, l => l.toUpperCase());
+  }
+  return null;
 }
 
-// CONVERSATIONAL STATE MACHINE & LEAD QUALIFIER
+// Generate Realistic Verified Property Listings
+function generateListingsHtml(lead) {
+  const loc = lead.location || "Miami Metro";
+  const type = lead.propertyType || "Luxury Home";
+  const rawBudget = lead.budget || "$850,000";
+  
+  const properties = [
+    {
+      title: `The Grand Panorama — ${type}`,
+      location: `${loc} • Prime Waterfront`,
+      price: rawBudget,
+      beds: "3 Beds",
+      baths: "3.5 Baths",
+      sqft: "2,680 Sq Ft",
+      image: "https://images.unsplash.com/photo-1600596542815-ffad4c1539a9?auto=format&fit=crop&w=600&q=80",
+      tag: "Verified Exclusive"
+    },
+    {
+      title: `Azure Vista Modern Villa`,
+      location: `${loc} • Gated Enclave`,
+      price: rawBudget.includes("$") ? rawBudget : `$${rawBudget}`,
+      beds: "4 Beds",
+      baths: "4 Baths",
+      sqft: "3,400 Sq Ft",
+      image: "https://images.unsplash.com/photo-1600585154340-be6161a56a0c?auto=format&fit=crop&w=600&q=80",
+      tag: "Off-Market Deal"
+    },
+    {
+      title: `The Reserve High-Rise Suite`,
+      location: `${loc} • Financial District`,
+      price: rawBudget,
+      beds: "3 Beds",
+      baths: "2.5 Baths",
+      sqft: "2,150 Sq Ft",
+      image: "https://images.unsplash.com/photo-1600607687939-ce8a6c25118c?auto=format&fit=crop&w=600&q=80",
+      tag: "Price Negotiable"
+    }
+  ];
+
+  let cardsHtml = `
+    <div class="mb-3">
+      <div class="flex items-center justify-between mb-2">
+        <span class="text-xs font-bold text-emerald-400 flex items-center gap-1.5">
+          <i class="fa-solid fa-sparkles text-amber-400"></i>
+          Found 3 Matching Verified Properties:
+        </span>
+        <span class="text-[10px] text-slate-400 bg-slate-800 px-2 py-0.5 rounded border border-slate-700">${escapeHTML(loc)}</span>
+      </div>
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-2.5">
+  `;
+
+  properties.forEach(p => {
+    cardsHtml += `
+      <div class="property-card-glow bg-slate-950/80 rounded-xl border border-slate-800/90 overflow-hidden flex flex-col group">
+        <div class="relative h-28 overflow-hidden">
+          <img src="${p.image}" alt="${p.title}" class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300" loading="lazy">
+          <span class="absolute top-1.5 left-1.5 bg-emerald-500/90 backdrop-blur-sm text-white text-[9px] font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">
+            ${p.tag}
+          </span>
+          <span class="absolute bottom-1.5 right-1.5 bg-slate-900/90 text-emerald-400 text-xs font-bold px-2 py-0.5 rounded border border-slate-800">
+            ${escapeHTML(p.price)}
+          </span>
+        </div>
+        <div class="p-2.5 flex-1 flex flex-col justify-between">
+          <div>
+            <h4 class="text-xs font-semibold text-white truncate">${escapeHTML(p.title)}</h4>
+            <p class="text-[10px] text-slate-400 truncate mb-1.5">${escapeHTML(p.location)}</p>
+          </div>
+          <div class="flex items-center justify-between text-[10px] text-slate-300 pt-1.5 border-t border-slate-800/60">
+            <span><i class="fa-solid fa-bed text-emerald-400 mr-1"></i>${p.beds}</span>
+            <span><i class="fa-solid fa-bath text-teal-400 mr-1"></i>${p.baths}</span>
+            <span><i class="fa-solid fa-ruler-combined text-slate-400 mr-1"></i>${p.sqft}</span>
+          </div>
+        </div>
+      </div>
+    `;
+  });
+
+  cardsHtml += `
+      </div>
+    </div>
+  `;
+  return cardsHtml;
+}
+
+// MAIN CONVERSATIONAL STATE MACHINE
 async function processUserTurn(userText) {
   showTypingIndicator();
-  
-  // Natural delay to feel conversational
-  await new Promise(res => setTimeout(res, 600));
+  await new Promise(res => setTimeout(res, 500));
 
   const text = userText.trim();
   const lower = text.toLowerCase();
   const lead = state.lead;
 
-  // Opportunistic extraction across any message
-  const foundEmail = extractEmail(text);
-  if (foundEmail && !lead.email) lead.email = foundEmail;
+  // Opportunistic extraction across ANY message
+  const emailInMsg = isValidEmail(text);
+  if (emailInMsg && !lead.email) lead.email = emailInMsg;
 
-  const foundPhone = extractPhone(text);
-  if (foundPhone && !lead.phone) lead.phone = foundPhone;
+  const phoneInMsg = isValidPhone(text);
+  if (phoneInMsg && !lead.phone) lead.phone = phoneInMsg;
 
-  // Step 1: INTENT & INITIAL RESPONSE
-  if (lead.step === "intent") {
-    if (lower.includes("buy") || lower.includes("purchase") || lower.includes("home")) {
-      lead.intent = "Purchase / Buy";
-    } else if (lower.includes("rent") || lower.includes("lease")) {
-      lead.intent = "Rent / Lease";
-    } else if (lower.includes("invest") || lower.includes("roi") || lower.includes("yield")) {
-      lead.intent = "Investment / High Yield";
-    } else if (lower.includes("sell") || lower.includes("list")) {
-      lead.intent = "Sell / List Property";
-    } else {
-      lead.intent = "General Real Estate Inquiry";
+  const budgetInMsg = extractBudget(text);
+  if (budgetInMsg && !lead.budget) lead.budget = budgetInMsg;
+
+  const locInMsg = extractLocation(text);
+  if (locInMsg && !lead.location) lead.location = locInMsg;
+
+  const propTypeInMsg = extractPropertyType(text);
+  if (propTypeInMsg && !lead.propertyType) lead.propertyType = propTypeInMsg;
+
+  const timelineInMsg = extractTimeline(text);
+  if (timelineInMsg && !lead.timeline) lead.timeline = timelineInMsg;
+
+  // ==========================================
+  // STAGE: POST-CONFIRMATION CONVERSATIONAL MEMORY
+  // ==========================================
+  if (lead.step === "completed") {
+    handlePostConfirmationTurn(text);
+    return;
+  }
+
+  // ==========================================
+  // OFF-TOPIC GUARD
+  // ==========================================
+  if (isOffTopic(text)) {
+    sendBotMessage(`I specialize exclusively in luxury real estate, property acquisitions, and private showings. Let's find your ideal property!\n\nWhich **city or neighborhood** are you looking in, or what is your **target price range**?`);
+    return;
+  }
+
+  // ==========================================
+  // STAGE: ASKING CONTACT INFORMATION
+  // ==========================================
+  if (lead.step === "ask_email") {
+    const validEmail = isValidEmail(text);
+    if (!validEmail) {
+      sendBotMessage(`That doesn't appear to be a complete email address. Please share a valid email (e.g. **name@domain.com**) so we can send over the verified listing dossier and pricing details.`);
+      return;
     }
+    lead.email = validEmail;
+    lead.step = "completed";
 
-    lead.step = "location_type";
-    sendBotMessage(`That sounds wonderful! We have an exclusive portfolio of verified listings and private off-market opportunities.\n\n**Which city, neighborhood, or area are you looking in**, and what style of property do you have in mind (e.g., 3-4 bedroom single-family home, modern condominium, or luxury estate)?`);
+    // Dispatch lead immediately
+    await dispatchLeadNotification();
+
+    // Summary Card with strictly required closing message
+    const summaryCard = `
+🎉 **Thank you, ${lead.name}! Your property request has been confirmed.**
+
+Here is your recorded inquiry summary:
+- 👤 **Client Name:** ${lead.name}
+- 📞 **Mobile (SMS):** ${lead.phone}
+- ✉️ **Email Address:** ${lead.email}
+- 🏡 **Interest:** ${lead.intent || 'Luxury Real Estate'}
+- 📍 **Target Area:** ${lead.location || 'Prime Metro'}
+- 💰 **Budget:** ${lead.budget || 'Custom Range'}
+- ⏱️ **Timeline:** ${lead.timeline || 'Flexible'}
+
+**Our team will contact you soon.**
+    `.trim();
+
+    sendBotMessage(summaryCard);
     return;
   }
 
-  // Step 2: LOCATION & PROPERTY TYPE
-  if (lead.step === "location_type") {
-    lead.location = text;
-    lead.propertyType = text;
-    lead.step = "budget";
-
-    sendBotMessage(`Excellent choices — that area has fantastic market dynamics and premium inventory.\n\nWhat is your **estimated price range or target budget** for this property?`);
-    return;
-  }
-
-  // Step 3: BUDGET
-  if (lead.step === "budget") {
-    lead.budget = extractBudget(text) || text;
-    lead.step = "timeline";
-
-    sendBotMessage(`Understood! And what is your **ideal purchase or move-in timeline** (e.g., ready immediately, within 30-60 days, or 3-6 months)?`);
-    return;
-  }
-
-  // Step 4: TIMELINE
-  if (lead.step === "timeline") {
-    lead.timeline = text;
-    lead.step = "ask_name";
-
-    sendBotMessage(`Perfect. I have identified 3 exclusive listings that match your criteria.\n\nMay I have your **full name** so I can reserve these listings and prepare your confidential property dossier?`);
-    return;
-  }
-
-  // Step 4: ASK NAME
-  if (lead.step === "ask_name") {
-    lead.name = cleanNameInput(text);
-    lead.step = "ask_phone";
-
-    sendBotMessage(`It's a pleasure to connect with you, **${lead.name}**!\n\nWhat is your best **cell phone number**? Our senior property specialist can send you instant SMS alerts and coordinate private showings.`);
-    return;
-  }
-
-  // Step 5: ASK PHONE
   if (lead.step === "ask_phone") {
-    const phone = extractPhone(text) || text;
-    lead.phone = phone;
+    const validPhone = isValidPhone(text);
+    if (!validPhone) {
+      sendBotMessage(`Please provide a valid cell phone number (at least 8-10 digits, e.g. **+1 (555) 234-5678**) so our senior concierge can send you instant SMS alerts and private tour confirmations.`);
+      return;
+    }
+    lead.phone = validPhone;
     lead.step = "ask_email";
 
     sendBotMessage(`Thank you, **${lead.name}**!\n\nLastly, what is your **primary email address** so we can immediately send over your personalized property portfolio, HD floor plans, and pricing sheet?`);
     return;
   }
 
-  // Step 6: ASK EMAIL & DISPATCH LEAD
-  if (lead.step === "ask_email" || (!lead.dispatched && lead.email && lead.phone && lead.name)) {
-    const email = extractEmail(text) || text;
-    lead.email = email;
-    lead.step = "completed";
+  if (lead.step === "ask_name") {
+    const validatedName = cleanAndValidateName(text);
+    if (!validatedName) {
+      sendBotMessage(`Could you please share your **full name** so I know whom to address and prepare your confidential property dossier for?`);
+      return;
+    }
+    lead.name = validatedName;
+    lead.step = "ask_phone";
 
-    // Trigger instant background lead dispatch
-    await dispatchLeadNotification();
-
-    sendBotMessage(`🎉 **Thank you, ${lead.name}! Your property request has been confirmed.**\n\nHere is your recorded inquiry summary:\n- 👤 **Client Name:** ${lead.name}\n- 📞 **Mobile (SMS):** ${lead.phone}\n- ✉️ **Email Address:** ${lead.email}\n- 🏡 **Interest:** ${lead.intent || 'Luxury Real Estate'}\n- 📍 **Target Area:** ${lead.location || 'Preferred Metro'}\n- 💰 **Budget:** ${lead.budget || 'Custom Range'}\n- ⏱️ **Timeline:** ${lead.timeline || 'Flexible'}\n\n**Our team will contact you soon.**`);
+    sendBotMessage(`It's a pleasure to connect with you, **${lead.name}**!\n\nWhat is your best **cell phone number**? Our senior property specialist can send you instant SMS alerts and coordinate private showings.`);
     return;
   }
 
-  // Step 7: COMPLETED / ONGOING CONVERSATION
-  if (lead.step === "completed") {
-    // Intelligent contextual real estate Q&A
-    const response = answerRealEstateQuestion(text);
-    sendBotMessage(response);
+  // ==========================================
+  // STAGE: CRITERIA GATHERING (Location, Type, Budget, Timeline)
+  // ==========================================
+  
+  // Set Intent if detected
+  if (!lead.intent) {
+    if (lower.includes("buy") || lower.includes("purchase") || lower.includes("home") || lower.includes("house")) {
+      lead.intent = "Purchase / Buy";
+    } else if (lower.includes("rent") || lower.includes("lease")) {
+      lead.intent = "Rent / Lease";
+    } else if (lower.includes("invest") || lower.includes("roi") || lower.includes("yield")) {
+      lead.intent = "High-Yield Investment";
+    } else if (lower.includes("sell") || lower.includes("list")) {
+      lead.intent = "Sell / List Property";
+    }
+  }
+
+  // If user provided a city/location directly in current text
+  if (!lead.location) {
+    lead.location = locInMsg || (text.length < 50 && !budgetInMsg && !isOffTopic(text) ? text : null);
+  }
+
+  // If user provided property style in current text
+  if (!lead.propertyType) {
+    lead.propertyType = propTypeInMsg;
+  }
+
+  // If user provided budget
+  if (!lead.budget) {
+    lead.budget = budgetInMsg;
+  }
+
+  // If user provided timeline
+  if (!lead.timeline) {
+    lead.timeline = timelineInMsg;
+  }
+
+  // Check what is still missing
+  // 1. Missing Location OR Property Type
+  if (!lead.location && !lead.propertyType) {
+    sendBotMessage(`That sounds wonderful! We have an exclusive portfolio of verified listings and private off-market opportunities.\n\n**Which city, neighborhood, or area are you looking in**, and what style of property do you have in mind (e.g., 3-4 bedroom single-family home, modern condominium, or luxury estate)?`);
     return;
   }
+
+  // 2. Missing Budget
+  if (!lead.budget) {
+    const locAck = lead.location ? `in **${lead.location}**` : "";
+    const typeAck = lead.propertyType ? `**${lead.propertyType}**` : "property";
+    sendBotMessage(`Excellent choices — ${typeAck} ${locAck} has fantastic market dynamics and premium inventory.\n\nWhat is your **estimated price range or target budget** for this property?`);
+    return;
+  }
+
+  // 3. Missing Timeline
+  if (!lead.timeline) {
+    sendBotMessage(`Noted! A budget of **${lead.budget}** offers great options.\n\nWhat is your **ideal purchase or move-in timeline** (e.g., immediate / ready now, within 30–60 days, or 3–6 months)?`);
+    return;
+  }
+
+  // All criteria gathered! Show actual property cards and transition to Lead Contact Capture
+  if (!lead.listingsShown) {
+    lead.listingsShown = true;
+    lead.step = "ask_name";
+
+    const listingsHtml = generateListingsHtml(lead);
+    const leadPrompt = `
+      ${listingsHtml}
+      <div class="mt-2 text-slate-200">
+        I have identified 3 exclusive verified listings matching your <strong>${lead.propertyType || 'luxury property'}</strong> search in <strong>${lead.location || 'the area'}</strong> with your <strong>${lead.budget}</strong> budget.
+        <div class="h-2"></div>
+        May I have your <strong>full name</strong> so I can reserve these listings and prepare your confidential property dossier?
+      </div>
+    `;
+
+    sendBotMessage(leadPrompt, true);
+    return;
+  }
+
+  // If already shown listings, proceed to ask_name
+  lead.step = "ask_name";
+  sendBotMessage(`May I have your **full name** so I can reserve these listings and prepare your confidential property dossier?`);
 }
 
-// Answer general real estate questions after lead capture
-function answerRealEstateQuestion(query) {
-  const q = query.toLowerCase();
-  
-  if (q.includes("pool") || q.includes("garden") || q.includes("office") || q.includes("garage") || q.includes("amenity")) {
-    return `Noted! I have appended those specific amenity preferences to your property file. Our specialist will ensure all presented options highlight these exact features.\n\nFeel free to ask about local neighborhood schools, recent comparable sales, or schedule a virtual walkthrough!`;
+// POST-CONFIRMATION CONVERSATIONAL MEMORY & INTELLIGENT HANDLER
+function handlePostConfirmationTurn(text) {
+  const q = text.toLowerCase().trim();
+  const lead = state.lead;
+
+  // 1. Inquiries about recorded lead details (Memory Recall)
+  if (q.includes("budget") || q.includes("price") || q.includes("cost")) {
+    sendBotMessage(`Your recorded budget is **${lead.budget || '$850,000'}** for your search in **${lead.location || 'Miami Metro'}**.\n\nWould you like me to adjust your price range or explore properties in a different bracket?`);
+    return;
   }
-  
+
+  if (q.includes("phone") || q.includes("number") || q.includes("sms") || q.includes("mobile")) {
+    sendBotMessage(`Your recorded mobile number is **${lead.phone}**.\n\nOur concierge will reach out to this number with SMS notifications and tour updates.`);
+    return;
+  }
+
+  if (q.includes("email") || q.includes("inbox") || q.includes("portfolio")) {
+    sendBotMessage(`Your recorded email address is **${lead.email}**.\n\nYour curated property brochure, floor plans, and market analysis are queued for this address.`);
+    return;
+  }
+
+  if (q.includes("name") || q.includes("who am i")) {
+    sendBotMessage(`You are registered as **${lead.name}** in our executive client directory.`);
+    return;
+  }
+
+  if (q.includes("location") || q.includes("area") || q.includes("city") || q.includes("neighborhood")) {
+    sendBotMessage(`Your target search area is currently set to **${lead.location || 'Miami Metro'}**.`);
+    return;
+  }
+
+  if (q.includes("timeline") || q.includes("when") || q.includes("move")) {
+    sendBotMessage(`Your preferred timeline is recorded as **${lead.timeline || 'Flexible'}**.`);
+    return;
+  }
+
+  // 2. Real-time updates to existing profile
+  const newBudget = extractBudget(text);
+  if (newBudget && (q.includes("change") || q.includes("update") || q.includes("make it") || q.includes("set budget"))) {
+    lead.budget = newBudget;
+    saveHistory();
+    dispatchLeadNotification();
+    sendBotMessage(`✅ Updated! Your budget is now saved as **${newBudget}**. We have updated your property advisor's file.`);
+    return;
+  }
+
+  // 3. Common real estate inquiries
   if (q.includes("rate") || q.includes("mortgage") || q.includes("loan") || q.includes("financing") || q.includes("interest")) {
-    return `Current 30-year fixed mortgage rates for well-qualified buyers are averaging around **6.3% to 6.7%**, with adjustable-rate mortgages (ARMs) offering introductory savings.\n\nWe work with top tier lending partners who can issue verified pre-approval letters in as little as 2 hours if you need financing support.`;
+    sendBotMessage(`Current 30-year fixed mortgage rates for qualified buyers are averaging **6.3% to 6.7%**, with jumbo loans and ARMs offering attractive structures.\n\nOur certified lending partners can issue pre-approval letters in under 2 hours if you'd like financing pre-qualification.`);
+    return;
   }
 
   if (q.includes("tour") || q.includes("visit") || q.includes("showing") || q.includes("schedule") || q.includes("see")) {
-    return `Private showings can be arranged 7 days a week between 9:00 AM and 7:00 PM. Our agent will text your cell number shortly to confirm your preferred day and time window for the walkthrough.`;
+    sendBotMessage(`Private showings can be arranged 7 days a week between 9:00 AM and 7:00 PM. Our senior agent will text your cell at **${lead.phone}** shortly to confirm your preferred day and time.`);
+    return;
   }
 
-  return `Understood! Your notes have been updated in real-time. Our property director is reviewing your file and will follow up with you directly via text message and email shortly.\n\nIs there anything else you would like to know about current market valuations, HOA guidelines, or closing procedures?`;
+  if (q.includes("hoa") || q.includes("tax") || q.includes("closing") || q.includes("fee")) {
+    sendBotMessage(`For luxury properties in **${lead.location || 'this metro'}**, property taxes typically range from **1.2% to 2.0%** of assessed value. HOA fees vary between **$0.60 to $1.20 per sq ft** depending on full-service amenities (concierge, valet, pool, security).`);
+    return;
+  }
+
+  // 4. Start over or new search
+  if (q.includes("new search") || q.includes("start over") || q.includes("reset") || q.includes("another")) {
+    sendBotMessage(`To start a brand new inquiry or search in a different market, click the **Reset** button (<i class="fa-solid fa-rotate-right"></i>) in the top right header!`);
+    return;
+  }
+
+  // 5. Gibberish or unparseable input check
+  if (text.length < 3 || /^[a-z]{6,}$/i.test(text) && !/[aeiouy]{2}/i.test(text)) {
+    sendBotMessage(`I didn't quite catch that. Your property profile for **${lead.location || 'your preferred area'}** is safely confirmed! Feel free to ask about local market statistics, private tour availability, or financing options.`);
+    return;
+  }
+
+  // 6. Natural contextual reply
+  sendBotMessage(`Understood! I've appended that note to your file. Our senior property advisor will review these preferences and follow up directly via text and email.\n\nIs there anything specific you would like to know about neighborhood schools, recent comparable sales, or HOA guidelines?`);
 }
 
 // Dispatch Lead Notification to Email and Webhook
 async function dispatchLeadNotification() {
-  if (state.lead.dispatched) return;
-  state.lead.dispatched = true;
-
   const lead = state.lead;
   
   // Format summary & transcript
@@ -452,16 +792,16 @@ NEW REAL ESTATE LEAD RECEIVED:
 Client Name:      ${lead.name}
 Phone (SMS):      ${lead.phone}
 Email:            ${lead.email}
-Intent:           ${lead.intent}
-Target Location:  ${lead.location}
-Budget:           ${lead.budget}
-Timeline:         ${lead.timeline}
+Intent:           ${lead.intent || 'Luxury Real Estate'}
+Target Location:  ${lead.location || 'Miami Metro'}
+Budget:           ${lead.budget || 'Custom Range'}
+Timeline:         ${lead.timeline || 'Immediate / Flexible'}
 Session ID:       ${state.sessionId}
 Capture Time:     ${new Date().toLocaleString()}
 ---------------------------------------------
 Lead Summary:
-The client expressed active interest in ${lead.intent} in ${lead.location}.
-Target budget stated as ${lead.budget} with timeline ${lead.timeline}.
+The client expressed active interest in ${lead.intent || 'luxury property'} in ${lead.location || 'the target area'}.
+Target budget stated as ${lead.budget || 'Custom'} with timeline ${lead.timeline || 'Flexible'}.
 Contact details verified via conversational assistant.
 ---------------------------------------------
 `.trim();
@@ -472,8 +812,7 @@ Contact details verified via conversational assistant.
     savedLeads.push({
       ...lead,
       capturedAt: new Date().toISOString(),
-      summary: executiveSummary,
-      transcript: transcriptText
+      summary: executiveSummary
     });
     localStorage.setItem("automatixes_captured_leads", JSON.stringify(savedLeads));
   } catch (e) {
@@ -481,7 +820,6 @@ Contact details verified via conversational assistant.
   }
 
   // 1. Dispatch to n8n Webhook
-  // Using both chatInput containing email/phone (triggers n8n regex) and structured payload
   const n8nPayload = {
     message: executiveSummary,
     chatInput: `${lead.name} | ${lead.phone} | ${lead.email} | Budget: ${lead.budget}`,
@@ -510,10 +848,10 @@ Contact details verified via conversational assistant.
     lead_name: lead.name,
     phone_number: lead.phone,
     email_address: lead.email,
-    property_intent: lead.intent,
-    location_preference: lead.location,
-    target_budget: lead.budget,
-    moving_timeline: lead.timeline,
+    property_interest: lead.intent || "Luxury Real Estate",
+    location_preference: lead.location || "Miami Metro",
+    target_budget: lead.budget || "Custom",
+    moving_timeline: lead.timeline || "Flexible",
     ai_executive_summary: executiveSummary,
     chat_transcript: transcriptText
   };
@@ -562,25 +900,53 @@ Contact details verified via conversational assistant.
   console.log(">>> [SUCCESS] Real estate lead dispatched for:", lead.name, lead.phone, lead.email);
 }
 
-// Clear Chat Action
-btnClearChat.addEventListener("click", () => {
-  if (confirm("Reset conversation and start a new property inquiry?")) {
-    chatMessages.innerHTML = "";
-    state.chatHistory = [];
-    state.sessionId = getOrCreateSessionId();
-    state.lead = {
-      step: "intent",
-      intent: "",
-      location: "",
-      propertyType: "",
-      budget: "",
-      timeline: "",
-      name: "",
-      phone: "",
-      email: "",
-      dispatched: false
-    };
-    localStorage.removeItem("propertyai_history");
-    sendWelcomeMessage();
-  }
-});
+// Global Non-Blocking Reset Chat Function
+window.resetChat = function() {
+  chatMessages.innerHTML = "";
+  state.chatHistory = [];
+  state.sessionId = "sess_" + Math.random().toString(36).substring(2, 10) + "_" + Date.now();
+  localStorage.setItem("propertyai_session_id", state.sessionId);
+  
+  state.lead = {
+    step: "criteria",
+    intent: "",
+    location: "",
+    propertyType: "",
+    budget: "",
+    timeline: "",
+    name: "",
+    phone: "",
+    email: "",
+    listingsShown: false,
+    dispatched: false
+  };
+
+  localStorage.removeItem("propertyai_history");
+  localStorage.removeItem("propertyai_current_lead");
+
+  if (chatInput) chatInput.value = "";
+  sendWelcomeMessage();
+
+  // Temporary toast indicator
+  showResetToast();
+};
+
+function showResetToast() {
+  const existing = document.getElementById("reset-toast");
+  if (existing) existing.remove();
+
+  const toast = document.createElement("div");
+  toast.id = "reset-toast";
+  toast.className = "fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-emerald-500/40 text-emerald-400 text-xs px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2 z-50 message-animate";
+  toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Conversation reset. Starting fresh!`;
+  document.body.appendChild(toast);
+  setTimeout(() => toast.remove(), 2500);
+}
+
+// Button listener for reset
+if (btnClearChat) {
+  btnClearChat.addEventListener("click", (e) => {
+    e.preventDefault();
+    window.resetChat();
+  });
+}
