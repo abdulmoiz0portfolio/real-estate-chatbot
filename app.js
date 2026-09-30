@@ -43,12 +43,17 @@ const btnClearChat = document.getElementById("btn-clear-chat");
 document.addEventListener("DOMContentLoaded", () => {
   initQuickPrompts();
 
-  // Purge any stale legacy history that contains obsolete "What happens next" text
+  // Purge any stale legacy history or corrupted $3 budget
   const savedHistory = localStorage.getItem("propertyai_history");
-  if (savedHistory) {
+  const savedLead = localStorage.getItem("propertyai_current_lead");
+  if (savedLead && (savedLead.includes('"$3"') || savedLead.includes('"$3k"') || savedLead.includes('"3"'))) {
+    localStorage.removeItem("propertyai_history");
+    localStorage.removeItem("propertyai_current_lead");
+  } else if (savedHistory) {
     try {
-      if (savedHistory.includes("What happens next") || savedHistory.includes("senior property concierge has received")) {
+      if (savedHistory.includes("What happens next") || savedHistory.includes("senior property concierge has received") || savedHistory.includes("$3 offers") || savedHistory.includes("$3 budget")) {
         localStorage.removeItem("propertyai_history");
+        localStorage.removeItem("propertyai_current_lead");
       } else {
         const parsed = JSON.parse(savedHistory);
         if (Array.isArray(parsed) && parsed.length > 0) {
@@ -325,31 +330,43 @@ function isValidPhone(text) {
 }
 
 function extractBudget(text) {
+  let val = null;
   // 1. Explicit dollar sign with amount: $850k, $1.2M, $500,000, $500000
   const dollarMatch = text.match(/\$\s*(\d+(?:,\d{3})*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?)/i);
   if (dollarMatch && dollarMatch[1]) {
-    return "$" + dollarMatch[1].trim().replace(/\s+/g, "").toUpperCase();
+    val = "$" + dollarMatch[1].trim().replace(/\s+/g, "").toUpperCase();
+  } else {
+    // 2. Keyword with amount: under 850k, budget 500k, price: 1.5 million, up to 750,000
+    const keywordMatch = text.match(/(?:under|below|up to|around|budget|price|max|approx)\s*[:\$]?\s*(\d+(?:,\d{3})*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?)/i);
+    if (keywordMatch && keywordMatch[1]) {
+      val = "$" + keywordMatch[1].trim().replace(/\s+/g, "").toUpperCase();
+    } else {
+      // 3. Number with suffix k/m/million, ensuring it's not a bedroom count (e.g. 500k, 1.2M)
+      const suffixMatch = text.match(/\b(\d+(?:\.\d+)?\s*(?:k|m|million|grand))\b/i);
+      if (suffixMatch && suffixMatch[1]) {
+        val = "$" + suffixMatch[1].trim().replace(/\s+/g, "").toUpperCase();
+      } else {
+        // 4. Standalone large numbers (>= 10,000) e.g. 850000, 500,000
+        const largeNum = text.match(/\b(\d{2,3}(?:,\d{3})+|\d{5,9})\b/);
+        if (largeNum && largeNum[1]) {
+          val = "$" + largeNum[1].trim().replace(/\s+/g, "");
+        }
+      }
+    }
   }
 
-  // 2. Keyword with amount: under 850k, budget 500k, price: 1.5 million, up to 750,000
-  const keywordMatch = text.match(/(?:under|below|up to|around|budget|price|max|approx)\s*[:\$]?\s*(\d+(?:,\d{3})*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?)/i);
-  if (keywordMatch && keywordMatch[1]) {
-    return "$" + keywordMatch[1].trim().replace(/\s+/g, "").toUpperCase();
-  }
+  if (!val) return null;
+  // Sanity check: Ensure budget is a real property number (reject $3, $4, or bedroom numbers)
+  const cleanNum = val.replace(/[^0-9.km]/gi, "").toLowerCase();
+  let numVal = 0;
+  if (cleanNum.includes("m")) numVal = parseFloat(cleanNum) * 1000000;
+  else if (cleanNum.includes("k")) numVal = parseFloat(cleanNum) * 1000;
+  else numVal = parseFloat(cleanNum);
 
-  // 3. Number with suffix k/m/million, ensuring it's not a bedroom count (e.g. 500k, 1.2M)
-  const suffixMatch = text.match(/\b(\d+(?:\.\d+)?\s*(?:k|m|million|grand))\b/i);
-  if (suffixMatch && suffixMatch[1]) {
-    return "$" + suffixMatch[1].trim().replace(/\s+/g, "").toUpperCase();
+  if (isNaN(numVal) || numVal < 10000) {
+    return null;
   }
-
-  // 4. Standalone large numbers (>= 10,000) e.g. 850000, 500,000
-  const largeNum = text.match(/\b(\d{2,3}(?:,\d{3})+|\d{5,9})\b/);
-  if (largeNum && largeNum[1]) {
-    return "$" + largeNum[1].trim().replace(/\s+/g, "");
-  }
-
-  return null;
+  return val;
 }
 
 function formatListingPrice(rawBudget, offsetPercent = 0) {
