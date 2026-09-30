@@ -325,16 +325,49 @@ function isValidPhone(text) {
 }
 
 function extractBudget(text) {
-  // Matches "$500k", "500k", "$1.2M", "1.5 million", "under 500,000", "$400,000", "500000"
-  const m = text.match(/(?:under|below|up to|around|budget|price)?\s*(\$?\s*\d+(?:,\d{3})*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?|\$\s*\d+)/i);
-  if (m && m[1]) {
-    let raw = m[1].trim().replace(/\s+/g, "");
-    if (!raw.startsWith("$") && !raw.toLowerCase().includes("usd")) {
-      raw = "$" + raw;
-    }
-    return raw.toUpperCase();
+  // 1. Explicit dollar sign with amount: $850k, $1.2M, $500,000, $500000
+  const dollarMatch = text.match(/\$\s*(\d+(?:,\d{3})*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?)/i);
+  if (dollarMatch && dollarMatch[1]) {
+    return "$" + dollarMatch[1].trim().replace(/\s+/g, "").toUpperCase();
   }
+
+  // 2. Keyword with amount: under 850k, budget 500k, price: 1.5 million, up to 750,000
+  const keywordMatch = text.match(/(?:under|below|up to|around|budget|price|max|approx)\s*[:\$]?\s*(\d+(?:,\d{3})*(?:\.\d+)?\s*(?:k|m|million|thousand|grand)?)/i);
+  if (keywordMatch && keywordMatch[1]) {
+    return "$" + keywordMatch[1].trim().replace(/\s+/g, "").toUpperCase();
+  }
+
+  // 3. Number with suffix k/m/million, ensuring it's not a bedroom count (e.g. 500k, 1.2M)
+  const suffixMatch = text.match(/\b(\d+(?:\.\d+)?\s*(?:k|m|million|grand))\b/i);
+  if (suffixMatch && suffixMatch[1]) {
+    return "$" + suffixMatch[1].trim().replace(/\s+/g, "").toUpperCase();
+  }
+
+  // 4. Standalone large numbers (>= 10,000) e.g. 850000, 500,000
+  const largeNum = text.match(/\b(\d{2,3}(?:,\d{3})+|\d{5,9})\b/);
+  if (largeNum && largeNum[1]) {
+    return "$" + largeNum[1].trim().replace(/\s+/g, "");
+  }
+
   return null;
+}
+
+function formatListingPrice(rawBudget, offsetPercent = 0) {
+  if (!rawBudget) return "$850,000";
+  let num = 0;
+  const clean = String(rawBudget).replace(/[^0-9.km]/gi, "").toLowerCase();
+  if (clean.includes("m")) {
+    num = parseFloat(clean.replace("m", "")) * 1000000;
+  } else if (clean.includes("k")) {
+    num = parseFloat(clean.replace("k", "")) * 1000;
+  } else {
+    num = parseFloat(clean);
+  }
+  if (!num || isNaN(num) || num < 50000) {
+    num = 850000;
+  }
+  const adjusted = Math.round((num * (1 + offsetPercent / 100)) / 1000) * 1000;
+  return "$" + adjusted.toLocaleString("en-US");
 }
 
 function extractTimeline(text) {
@@ -439,7 +472,7 @@ function generateListingsHtml(lead) {
     {
       title: `The Grand Panorama — ${type}`,
       location: `${loc} • Prime Waterfront`,
-      price: rawBudget,
+      price: formatListingPrice(rawBudget, 0),
       beds: "3 Beds",
       baths: "3.5 Baths",
       sqft: "2,680 Sq Ft",
@@ -449,7 +482,7 @@ function generateListingsHtml(lead) {
     {
       title: `Azure Vista Modern Villa`,
       location: `${loc} • Gated Enclave`,
-      price: rawBudget.includes("$") ? rawBudget : `$${rawBudget}`,
+      price: formatListingPrice(rawBudget, 5),
       beds: "4 Beds",
       baths: "4 Baths",
       sqft: "3,400 Sq Ft",
@@ -459,7 +492,7 @@ function generateListingsHtml(lead) {
     {
       title: `The Reserve High-Rise Suite`,
       location: `${loc} • Financial District`,
-      price: rawBudget,
+      price: formatListingPrice(rawBudget, -6),
       beds: "3 Beds",
       baths: "2.5 Baths",
       sqft: "2,150 Sq Ft",
