@@ -50,6 +50,35 @@
   <main class="flex-1 min-h-0 max-w-4xl w-full mx-auto p-2 sm:p-4 flex flex-col overflow-hidden">
     <div class="flex-1 min-h-0 flex flex-col glass-panel rounded-2xl border border-slate-800/80 bg-slate-900/50 overflow-hidden shadow-2xl relative">
       
+      <!-- Interactive Demo Testing Mode Banner -->
+      <div id="demo-tester-banner" class="shrink-0 px-3.5 py-2 bg-gradient-to-r from-emerald-950/70 via-slate-900/90 to-teal-950/70 border-b border-emerald-500/20 flex flex-wrap items-center justify-between gap-2 text-xs z-30">
+        <div class="flex items-center gap-2">
+          <span class="px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold text-[10px] tracking-wide uppercase flex items-center gap-1.5 shadow-sm">
+            <i class="fa-solid fa-flask"></i> Demo Test Mode
+          </span>
+          <span class="text-slate-300 text-[11px] hidden sm:inline">Receive instant lead notifications to your email:</span>
+        </div>
+        <div class="flex items-center gap-1.5 flex-1 sm:flex-initial justify-end">
+          <div class="relative w-full sm:w-60">
+            <input 
+              type="email" 
+              id="tester-email-input" 
+              placeholder="Enter your email for live test alert..." 
+              class="w-full bg-slate-950/90 border border-slate-700/80 rounded-lg px-2.5 py-1 text-xs text-slate-100 placeholder-slate-500 focus:outline-none focus:border-emerald-500 transition-all"
+            />
+          </div>
+          <button 
+            type="button"
+            id="btn-save-tester-email" 
+            onclick="saveTesterEmail()" 
+            class="px-3 py-1 rounded-lg bg-emerald-500/20 hover:bg-emerald-500 border border-emerald-500/40 text-emerald-400 hover:text-white font-medium text-xs transition-all cursor-pointer shrink-0 flex items-center gap-1"
+            title="Save email to receive lead alerts"
+          >
+            <i class="fa-solid fa-paper-plane text-[10px]"></i> <span id="tester-btn-text">Save</span>
+          </button>
+        </div>
+      </div>
+
       <!-- Messages Area: Only this scrolls -->
       <div id="chat-messages" class="flex-1 min-h-0 overflow-y-auto p-4 sm:p-6 space-y-4 custom-scrollbar">
         <!-- Messages rendered dynamically -->
@@ -127,9 +156,10 @@
     <input type="hidden" name="Budget" id="lead-form-budget">
     <input type="hidden" name="Timeline" id="lead-form-timeline">
     <input type="hidden" name="Lead_Summary" id="lead-form-summary">
+    <input type="hidden" name="Tester_Notification_Email" id="lead-form-tester-email">
   </form>
   <iframe name="lead_sink_iframe" id="lead_sink_iframe" style="display:none;width:0;height:0;border:none;"></iframe>
 
-  <script src="app.js?v=3.4"></script>
+  <script src="app.js?v=3.5"></script>
 </body>
 </html>

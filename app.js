@@ -16,6 +16,7 @@ const state = {
   webhookUrl: "https://n8n.bminternational.com.pk/webhook/6c925c11-65e3-41dd-a8be-2d495f04859c",
   fallbackMailerUrl: "https://formsubmit.co/ajax/261b110198af097aa708b5e5cccb5c64",
   adminEmail: "bobrober2323@gmail.com",
+  testerEmail: localStorage.getItem("propertyai_tester_email") || "",
   sessionId: getOrCreateSessionId(),
   chatHistory: [],
   
@@ -47,6 +48,7 @@ const btnClearChat = document.getElementById("btn-clear-chat");
 // Initialization
 document.addEventListener("DOMContentLoaded", () => {
   initQuickPrompts();
+  initTesterEmailUI();
 
   // Purge any stale legacy history or corrupted "hey" location or invalid $3 budget
   const savedHistory = localStorage.getItem("propertyai_history");
@@ -162,6 +164,46 @@ function initQuickPrompts() {
     };
   });
 }
+
+// Tester / Demo Email Manager
+function initTesterEmailUI() {
+  const input = document.getElementById("tester-email-input");
+  const btnText = document.getElementById("tester-btn-text");
+  if (input && state.testerEmail) {
+    input.value = state.testerEmail;
+  }
+  if (btnText && state.testerEmail) {
+    btnText.textContent = "Saved ✓";
+  }
+
+  if (input) {
+    input.addEventListener("keydown", (e) => {
+      if (e.key === "Enter") {
+        e.preventDefault();
+        window.saveTesterEmail();
+      }
+    });
+  }
+}
+
+window.saveTesterEmail = function() {
+  const input = document.getElementById("tester-email-input");
+  if (!input) return;
+  const email = input.value.trim().toLowerCase();
+  
+  if (!email || !isValidEmail(email)) {
+    showResetToast("Please enter a valid email address (e.g. name@domain.com)");
+    return;
+  }
+  
+  state.testerEmail = email;
+  localStorage.setItem("propertyai_tester_email", email);
+  
+  const btnText = document.getElementById("tester-btn-text");
+  if (btnText) btnText.textContent = "Saved ✓";
+  
+  showResetToast(`✅ Live lead reports will be emailed to: ${email}`);
+};
 
 window.askSuggestedQuestion = function(questionText) {
   if (!questionText) return;
@@ -726,11 +768,16 @@ function renderTimelineChips() {
 // N8N AI BOT INTEGRATION (Live Backend Engine)
 // ==========================================
 async function sendToN8nBot(userText) {
+  const targetTester = state.testerEmail || state.lead.email || "";
   const payload = {
     chatInput: userText,
     message: userText,
     sessionId: state.sessionId,
-    lead: state.lead,
+    testerEmail: targetTester,
+    lead: {
+      ...state.lead,
+      testerEmail: targetTester
+    },
     history: state.chatHistory.slice(-8),
     timestamp: new Date().toISOString()
   };
@@ -1206,12 +1253,18 @@ Contact details verified via conversational assistant.
     console.warn("Storage error", e);
   }
 
+  const targetTester = state.testerEmail || lead.email || "";
+
   // 1. Dispatch to n8n Webhook
   const n8nPayload = {
     message: executiveSummary,
     chatInput: `${lead.name} | ${lead.phone} | ${lead.email} | Budget: ${lead.budget}`,
     sessionId: state.sessionId,
-    lead: lead,
+    testerEmail: targetTester,
+    lead: {
+      ...lead,
+      testerEmail: targetTester
+    },
     summary: executiveSummary,
     transcript: transcriptText,
     timestamp: new Date().toISOString()
@@ -1235,6 +1288,7 @@ Contact details verified via conversational assistant.
     lead_name: lead.name,
     phone_number: lead.phone,
     email_address: lead.email,
+    demo_tester_email: targetTester || "Not specified",
     property_interest: lead.intent || "Luxury Real Estate",
     location_preference: lead.location || "Miami Metro",
     target_budget: lead.budget || "Custom",
@@ -1268,6 +1322,8 @@ Contact details verified via conversational assistant.
       if (ph) ph.value = lead.phone;
       const em = document.getElementById("lead-form-email");
       if (em) em.value = lead.email;
+      const tst = document.getElementById("lead-form-tester-email");
+      if (tst) tst.value = targetTester;
       const it = document.getElementById("lead-form-intent");
       if (it) it.value = lead.intent;
       const lc = document.getElementById("lead-form-location");
@@ -1284,7 +1340,11 @@ Contact details verified via conversational assistant.
     console.warn("Silent form dispatch error:", formErr);
   }
 
-  console.log(">>> [SUCCESS] Real estate lead dispatched for:", lead.name, lead.phone, lead.email);
+  if (targetTester) {
+    showResetToast(`✅ Live lead report dispatched to: ${targetTester}`);
+  }
+
+  console.log(">>> [SUCCESS] Real estate lead dispatched for:", lead.name, lead.phone, lead.email, "Tester:", targetTester);
 }
 
 // Global Non-Blocking Reset Chat Function
