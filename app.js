@@ -770,6 +770,7 @@ function renderTimelineChips() {
 async function sendToN8nBot(userText) {
   const targetTester = state.testerEmail || state.lead.email || "";
   const payload = {
+    action: "chat",
     chatInput: userText,
     message: userText,
     sessionId: state.sessionId,
@@ -1255,8 +1256,9 @@ Contact details verified via conversational assistant.
 
   const targetTester = state.testerEmail || lead.email || "";
 
-  // 1. Dispatch to n8n Webhook
+  // 1. Primary Dispatch to n8n Webhook
   const n8nPayload = {
+    action: "lead_completed",
     message: executiveSummary,
     chatInput: `${lead.name} | ${lead.phone} | ${lead.email} | Budget: ${lead.budget}`,
     sessionId: state.sessionId,
@@ -1270,74 +1272,52 @@ Contact details verified via conversational assistant.
     timestamp: new Date().toISOString()
   };
 
+  let n8nDispatched = false;
   try {
-    fetch(state.webhookUrl, {
+    const res = await fetch(state.webhookUrl, {
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(n8nPayload)
-    }).catch(err => console.warn("n8n webhook dispatch warning:", err));
-  } catch (err) {
-    console.warn("n8n dispatch failed", err);
-  }
-
-  // 2. Dispatch Direct Email via FormSubmit to bobrober2323@gmail.com
-  const emailPayload = {
-    _subject: `🔥 NEW REAL ESTATE LEAD: ${lead.name} - ${lead.budget} (${lead.location})`,
-    _template: "table",
-    _captcha: "false",
-    lead_name: lead.name,
-    phone_number: lead.phone,
-    email_address: lead.email,
-    demo_tester_email: targetTester || "Not specified",
-    property_interest: lead.intent || "Luxury Real Estate",
-    location_preference: lead.location || "Miami Metro",
-    target_budget: lead.budget || "Custom",
-    moving_timeline: lead.timeline || "Flexible",
-    ai_executive_summary: executiveSummary,
-    chat_transcript: transcriptText
-  };
-
-  try {
-    fetch(state.fallbackMailerUrl, {
-      method: "POST",
-      headers: { 
-        "Content-Type": "application/json",
-        "Accept": "application/json"
-      },
-      body: JSON.stringify(emailPayload)
-    }).catch(err => console.warn("Direct mailer notice:", err));
-  } catch (err) {
-    console.warn("Direct mailer failed", err);
-  }
-
-  // 3. Silent Browser Form Submission to bobrober2323@gmail.com
-  try {
-    const form = document.getElementById("lead-dispatch-form");
-    if (form) {
-      const subj = document.getElementById("lead-form-subject");
-      if (subj) subj.value = `🔥 NEW LEAD: ${lead.name} - ${lead.budget} (${lead.location})`;
-      const nm = document.getElementById("lead-form-name");
-      if (nm) nm.value = lead.name;
-      const ph = document.getElementById("lead-form-phone");
-      if (ph) ph.value = lead.phone;
-      const em = document.getElementById("lead-form-email");
-      if (em) em.value = lead.email;
-      const tst = document.getElementById("lead-form-tester-email");
-      if (tst) tst.value = targetTester;
-      const it = document.getElementById("lead-form-intent");
-      if (it) it.value = lead.intent;
-      const lc = document.getElementById("lead-form-location");
-      if (lc) lc.value = lead.location;
-      const bg = document.getElementById("lead-form-budget");
-      if (bg) bg.value = lead.budget;
-      const tm = document.getElementById("lead-form-timeline");
-      if (tm) tm.value = lead.timeline;
-      const sm = document.getElementById("lead-form-summary");
-      if (sm) sm.value = executiveSummary;
-      form.submit();
+    });
+    if (res.ok) {
+      n8nDispatched = true;
+      console.log(">>> [n8n] Lead notification successfully dispatched via n8n.");
     }
-  } catch (formErr) {
-    console.warn("Silent form dispatch error:", formErr);
+  } catch (err) {
+    console.warn("n8n webhook dispatch warning:", err);
+  }
+
+  // 2. Fallback to FormSubmit ONLY if n8n was not reachable
+  if (!n8nDispatched) {
+    try {
+      const emailPayload = {
+        _subject: `🔥 NEW REAL ESTATE LEAD: ${lead.name} - ${lead.budget} (${lead.location})`,
+        _template: "table",
+        _captcha: "false",
+        _cc: [targetTester, "abdulmoizbaig50@gmail.com"].filter(Boolean).filter((v, i, a) => a.indexOf(v) === i).join(", "),
+        lead_name: lead.name,
+        phone_number: lead.phone,
+        email_address: lead.email,
+        demo_tester_email: targetTester || "Not specified",
+        property_interest: lead.intent || "Luxury Real Estate",
+        location_preference: lead.location || "Miami Metro",
+        target_budget: lead.budget || "Custom",
+        moving_timeline: lead.timeline || "Flexible",
+        ai_executive_summary: executiveSummary,
+        chat_transcript: transcriptText
+      };
+      await fetch(state.fallbackMailerUrl, {
+        method: "POST",
+        headers: { 
+          "Content-Type": "application/json",
+          "Accept": "application/json"
+        },
+        body: JSON.stringify(emailPayload)
+      });
+      console.log(">>> [Fallback] Dispatched lead via FormSubmit.");
+    } catch (fbErr) {
+      console.warn("Direct mailer fallback warning:", fbErr);
+    }
   }
 
   if (targetTester) {
