@@ -722,11 +722,111 @@ function renderTimelineChips() {
   `;
 }
 
-// MAIN CONVERSATIONAL STATE MACHINE
+// ==========================================
+// N8N AI BOT INTEGRATION (Live Backend Engine)
+// ==========================================
+async function sendToN8nBot(userText) {
+  const payload = {
+    chatInput: userText,
+    message: userText,
+    sessionId: state.sessionId,
+    lead: state.lead,
+    history: state.chatHistory.slice(-8),
+    timestamp: new Date().toISOString()
+  };
+
+  try {
+    const response = await fetch(state.webhookUrl, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        "Accept": "application/json"
+      },
+      body: JSON.stringify(payload)
+    });
+
+    if (response.ok) {
+      const data = await response.json();
+      let replyText = "";
+      if (typeof data === "string") replyText = data;
+      else if (data.output) replyText = data.output;
+      else if (data.text) replyText = data.text;
+      else if (data.response) replyText = data.response;
+      else if (data.message) replyText = data.message;
+      else if (data.reply) replyText = data.reply;
+      else if (Array.isArray(data) && data[0]) {
+        replyText = data[0].output || data[0].text || data[0].response || data[0].message || JSON.stringify(data[0]);
+      } else {
+        replyText = JSON.stringify(data);
+      }
+      return { success: true, text: replyText };
+    } else {
+      const err = await response.json().catch(() => ({}));
+      return {
+        success: false,
+        status: response.status,
+        message: err.message || `HTTP ${response.status}`
+      };
+    }
+  } catch (err) {
+    return { success: false, error: err.message };
+  }
+}
+
+// MAIN CONVERSATIONAL STATE MACHINE (100% Routed to n8n AI Bot)
 async function processUserTurn(userText) {
   showTypingIndicator();
-  await new Promise(res => setTimeout(res, 450));
 
+  const text = userText.trim();
+  const lead = state.lead;
+
+  // Opportunistic extraction to keep local lead profile in sync
+  const emailInMsg = isValidEmail(text);
+  if (emailInMsg && !lead.email) lead.email = emailInMsg;
+
+  const phoneInMsg = isValidPhone(text);
+  if (phoneInMsg && !lead.phone) lead.phone = phoneInMsg;
+
+  const budgetInMsg = extractBudget(text);
+  if (budgetInMsg && !lead.budget) lead.budget = budgetInMsg;
+
+  const locInMsg = extractLocation(text);
+  if (locInMsg && !lead.location) lead.location = locInMsg;
+
+  const propTypeInMsg = extractPropertyType(text);
+  if (propTypeInMsg && !lead.propertyType) lead.propertyType = propTypeInMsg;
+
+  const timelineInMsg = extractTimeline(text);
+  if (timelineInMsg && !lead.timeline) lead.timeline = timelineInMsg;
+
+  saveHistory();
+
+  // 1. Send completely to n8n AI Bot Webhook
+  const botResult = await sendToN8nBot(text);
+
+  if (botResult.success && botResult.text) {
+    sendBotMessage(botResult.text);
+
+    // If email is captured and not dispatched yet, trigger lead dispatch
+    if (lead.email && !lead.dispatched) {
+      lead.dispatched = true;
+      dispatchLeadNotification();
+    }
+    return;
+  }
+
+  // 2. If n8n returns 404 (Workflow Inactive / Deactivated) or server offline:
+  if (!botResult.success) {
+    if (botResult.status === 404) {
+      sendBotMessage(`⚠️ **n8n AI Workflow is Inactive (Deactivated)**\n\nThe conversation is routed directly to your n8n AI agent, but the workflow toggle is currently **OFF** in your n8n canvas.\n\n👉 **Please open your n8n dashboard and toggle the workflow to Active (ON)** in the top-right corner to chat with your live Groq AI model.\n\n*(Running local concierge mode while n8n is inactive)*`);
+    }
+    processLocalFallback(text);
+  }
+}
+
+// LOCAL CONCIERGE FALLBACK (Runs only if n8n webhook is inactive or down)
+async function processLocalFallback(userText) {
+  await new Promise(res => setTimeout(res, 350));
   const text = userText.trim();
   const lower = text.toLowerCase();
   const lead = state.lead;
