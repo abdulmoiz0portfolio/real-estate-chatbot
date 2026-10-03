@@ -101,52 +101,41 @@ document.addEventListener("DOMContentLoaded", () => {
   sendWelcomeMessage();
 });
 
-// Render Welcome Greeting
+// Render Welcome Greeting (Exact Mobile Reference Design)
 function sendWelcomeMessage() {
-  const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement("div");
-  msgEl.className = "flex items-start gap-3 message-animate";
+  msgEl.className = "welcome-section space-y-3 mb-2 message-animate";
 
   msgEl.innerHTML = `
-    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-sm shrink-0 shadow-md shadow-emerald-500/20">
-      <i class="fa-solid fa-building-user"></i>
+    <!-- Welcome Card -->
+    <div class="bg-[#0F1728]/85 border border-slate-800/90 rounded-2xl p-4 sm:p-5 shadow-lg">
+      <h2 class="text-base sm:text-lg font-bold text-white mb-1.5 leading-snug">Welcome to PropertyAI Concierge</h2>
+      <p class="text-slate-400 text-xs sm:text-sm leading-relaxed">
+        I help you find verified listings, book private viewings, and explore off-market deals.
+      </p>
     </div>
-    <div class="max-w-[95%] sm:max-w-[85%]">
-      <div class="bg-slate-900/90 border border-slate-800 text-slate-100 p-4 sm:p-5 rounded-2xl rounded-tl-none shadow-xl text-xs sm:text-sm leading-relaxed">
-        <div class="flex items-center gap-2 mb-1.5">
-          <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-          <h3 class="text-base font-bold text-white">Welcome to PropertyAI Concierge 👋</h3>
-        </div>
-        <p class="text-slate-300 text-xs sm:text-sm mb-3.5">
-          I am your autonomous 24/7 real estate concierge powered by Automatixes. I help you discover verified listings, schedule private VIP viewings, and analyze off-market opportunities.
-        </p>
 
-        <div class="bg-slate-950/70 border border-slate-800/80 rounded-xl p-3.5 mb-2">
-          <p class="text-xs font-bold text-emerald-400 mb-2.5 flex items-center gap-1.5">
-            <i class="fa-solid fa-sparkles text-amber-400"></i>
-            How can I assist your property search today?
-          </p>
-          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
-            <button onclick="askSuggestedQuestion('I am looking to buy a 3-bedroom luxury residential home.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-house-chimney text-emerald-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">🏡 Buy a Luxury Home</span>
-            </button>
-            <button onclick="askSuggestedQuestion('I would like to schedule a private VIP home showing in Miami.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-calendar-check text-blue-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">📅 Schedule Private Showing</span>
-            </button>
-            <button onclick="askSuggestedQuestion('I am looking for high-yield investment properties under $1.5M.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-chart-line text-purple-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">📈 High-Yield Investments</span>
-            </button>
-            <button onclick="askSuggestedQuestion('I want to sell my property for maximum market valuation.')" class="text-left p-2.5 rounded-lg bg-slate-900 hover:bg-emerald-500/20 border border-slate-800 hover:border-emerald-500/40 text-xs text-slate-200 transition-all flex items-center gap-2">
-              <i class="fa-solid fa-tag text-teal-400 shrink-0 text-[11px]"></i>
-              <span class="truncate">🏷️ Sell / Value My Property</span>
-            </button>
-          </div>
-        </div>
-      </div>
-      <div class="text-[10px] text-slate-500 mt-1">${time}</div>
+    <!-- 2x2 Bento Action Cards -->
+    <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
+      <button onclick="askSuggestedQuestion('I am looking to buy a luxury residential home.')" class="bg-[#0F1728]/85 hover:bg-[#131F35] border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.98] group cursor-pointer shadow-sm">
+        <i class="fa-solid fa-house text-emerald-400 text-xl mb-3 block group-hover:scale-105 transition-transform"></i>
+        <span class="text-xs sm:text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors block leading-snug">Buy a Luxury Home</span>
+      </button>
+
+      <button onclick="askSuggestedQuestion('I would like to schedule a private VIP home showing in Miami.')" class="bg-[#0F1728]/85 hover:bg-[#131F35] border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.98] group cursor-pointer shadow-sm">
+        <i class="fa-regular fa-calendar-check text-emerald-400 text-xl mb-3 block group-hover:scale-105 transition-transform"></i>
+        <span class="text-xs sm:text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors block leading-snug">Schedule a Showing</span>
+      </button>
+
+      <button onclick="askSuggestedQuestion('I am looking for high-yield investment properties.')" class="bg-[#0F1728]/85 hover:bg-[#131F35] border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.98] group cursor-pointer shadow-sm">
+        <i class="fa-solid fa-chart-line text-emerald-400 text-xl mb-3 block group-hover:scale-105 transition-transform"></i>
+        <span class="text-xs sm:text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors block leading-snug">Investments</span>
+      </button>
+
+      <button onclick="askSuggestedQuestion('I want to sell my property for maximum market valuation.')" class="bg-[#0F1728]/85 hover:bg-[#131F35] border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.98] group cursor-pointer shadow-sm">
+        <i class="fa-solid fa-tag text-emerald-400 text-xl mb-3 block group-hover:scale-105 transition-transform"></i>
+        <span class="text-xs sm:text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors block leading-snug">Sell / Value Property</span>
+      </button>
     </div>
   `;
 
@@ -249,11 +238,11 @@ function addUserMessage(text) {
   const msgEl = document.createElement("div");
   msgEl.className = "flex justify-end message-animate";
   msgEl.innerHTML = `
-    <div class="max-w-[85%] sm:max-w-[75%]">
-      <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-md text-xs sm:text-sm leading-relaxed">
+    <div class="max-w-[85%] sm:max-w-[78%]">
+      <div class="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-md text-xs sm:text-sm leading-relaxed">
         ${escapeHTML(text)}
       </div>
-      <div class="text-[10px] text-slate-500 text-right mt-1">${time}</div>
+      <div class="text-[10px] text-slate-500 text-right mt-1 pr-1">${time}</div>
     </div>
   `;
   chatMessages.appendChild(msgEl);
@@ -268,19 +257,19 @@ function sendBotMessage(content, isRawHtml = false) {
   hideTypingIndicator();
   const time = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
   const msgEl = document.createElement("div");
-  msgEl.className = "flex items-start gap-3 message-animate";
+  msgEl.className = "flex items-start gap-2.5 message-animate";
 
   const formattedContent = isRawHtml ? content : formatMarkdown(content);
 
   msgEl.innerHTML = `
-    <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs shrink-0 shadow-md shadow-emerald-500/20">
-      <i class="fa-solid fa-building-user"></i>
+    <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xs shrink-0 shadow-sm mt-0.5">
+      <i class="fa-solid fa-house text-[11px]"></i>
     </div>
-    <div class="max-w-[95%] sm:max-w-[85%] w-full">
-      <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3.5 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
+    <div class="max-w-[92%] sm:max-w-[85%] w-full">
+      <div class="bg-[#0F1728]/90 border border-slate-800/90 text-slate-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-md text-xs sm:text-sm leading-relaxed">
         ${formattedContent}
       </div>
-      <div class="text-[10px] text-slate-500 mt-1 flex items-center justify-between">
+      <div class="text-[10px] text-slate-500 mt-1 flex items-center justify-between px-1">
         <span>${time}</span>
         <button type="button" onclick="openFeedbackModal('Response Quality')" class="text-slate-500 hover:text-emerald-400 text-[10px] flex items-center gap-1 transition-colors cursor-pointer" title="Rate this response">
           <i class="fa-regular fa-star text-[9px] text-amber-400/80"></i>
@@ -301,12 +290,12 @@ function showTypingIndicator() {
   if (document.getElementById("typing-indicator")) return;
   const typingEl = document.createElement("div");
   typingEl.id = "typing-indicator";
-  typingEl.className = "flex items-start gap-3 message-animate";
+  typingEl.className = "flex items-start gap-2.5 message-animate";
   typingEl.innerHTML = `
-    <div class="w-9 h-9 rounded-xl bg-slate-800 border border-slate-700 flex items-center justify-center text-emerald-400 text-xs shrink-0">
-      <i class="fa-solid fa-building-user"></i>
+    <div class="w-8 h-8 rounded-xl bg-emerald-500/20 border border-emerald-500/40 flex items-center justify-center text-emerald-400 text-xs shrink-0 mt-0.5">
+      <i class="fa-solid fa-house text-[11px]"></i>
     </div>
-    <div class="bg-slate-900 border border-slate-800 px-4 py-3 rounded-2xl rounded-tl-none flex items-center gap-1.5 shadow-md">
+    <div class="bg-[#0F1728]/90 border border-slate-800/90 px-4 py-3 rounded-2xl rounded-tl-sm flex items-center gap-1.5 shadow-md">
       <div class="typing-dot"></div>
       <div class="typing-dot"></div>
       <div class="typing-dot"></div>
@@ -347,27 +336,33 @@ function renderSavedHistory() {
       const msgEl = document.createElement("div");
       msgEl.className = "flex justify-end message-animate";
       msgEl.innerHTML = `
-        <div class="max-w-[85%] sm:max-w-[75%]">
-          <div class="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-3 rounded-2xl rounded-tr-none shadow-md text-xs sm:text-sm leading-relaxed">
+        <div class="max-w-[85%] sm:max-w-[78%]">
+          <div class="bg-emerald-600 text-white px-4 py-2.5 rounded-2xl rounded-tr-sm shadow-md text-xs sm:text-sm leading-relaxed">
             ${escapeHTML(msg.content)}
           </div>
-          <div class="text-[10px] text-slate-500 text-right mt-1">${msg.time || ''}</div>
+          <div class="text-[10px] text-slate-500 text-right mt-1 pr-1">${msg.time || ''}</div>
         </div>
       `;
       chatMessages.appendChild(msgEl);
     } else {
       const msgEl = document.createElement("div");
-      msgEl.className = "flex items-start gap-3 message-animate";
+      msgEl.className = "flex items-start gap-2.5 message-animate";
       const body = msg.isHtml ? msg.content : formatMarkdown(msg.content);
       msgEl.innerHTML = `
-        <div class="w-9 h-9 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-400 flex items-center justify-center text-white text-xs shrink-0 shadow-md shadow-emerald-500/20">
-          <i class="fa-solid fa-building-user"></i>
+        <div class="w-8 h-8 rounded-xl bg-emerald-500 flex items-center justify-center text-white text-xs shrink-0 shadow-sm mt-0.5">
+          <i class="fa-solid fa-house text-[11px]"></i>
         </div>
-        <div class="max-w-[95%] sm:max-w-[85%] w-full">
-          <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3.5 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
+        <div class="max-w-[92%] sm:max-w-[85%] w-full">
+          <div class="bg-[#0F1728]/90 border border-slate-800/90 text-slate-100 px-4 py-3 rounded-2xl rounded-tl-sm shadow-md text-xs sm:text-sm leading-relaxed">
             ${body}
           </div>
-          <div class="text-[10px] text-slate-500 mt-1">${msg.time || ''}</div>
+          <div class="text-[10px] text-slate-500 mt-1 flex items-center justify-between px-1">
+            <span>${msg.time || ''}</span>
+            <button type="button" onclick="openFeedbackModal('Response Quality')" class="text-slate-500 hover:text-emerald-400 text-[10px] flex items-center gap-1 transition-colors cursor-pointer" title="Rate this response">
+              <i class="fa-regular fa-star text-[9px] text-amber-400/80"></i>
+              <span>Feedback</span>
+            </button>
+          </div>
         </div>
       `;
       chatMessages.appendChild(msgEl);
