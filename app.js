@@ -49,6 +49,7 @@ const btnClearChat = document.getElementById("btn-clear-chat");
 document.addEventListener("DOMContentLoaded", () => {
   initQuickPrompts();
   initTesterEmailUI();
+  initFeedbackSystem();
 
   // Purge any stale legacy history or corrupted "hey" location or invalid $3 budget
   const savedHistory = localStorage.getItem("propertyai_history");
@@ -279,7 +280,13 @@ function sendBotMessage(content, isRawHtml = false) {
       <div class="bg-slate-900/90 border border-slate-800 text-slate-100 px-4 py-3.5 rounded-2xl rounded-tl-none shadow-md text-xs sm:text-sm leading-relaxed">
         ${formattedContent}
       </div>
-      <div class="text-[10px] text-slate-500 mt-1">${time}</div>
+      <div class="text-[10px] text-slate-500 mt-1 flex items-center justify-between">
+        <span>${time}</span>
+        <button type="button" onclick="openFeedbackModal('Response Quality')" class="text-slate-500 hover:text-emerald-400 text-[10px] flex items-center gap-1 transition-colors cursor-pointer" title="Rate this response">
+          <i class="fa-regular fa-star text-[9px] text-amber-400/80"></i>
+          <span>Feedback</span>
+        </button>
+      </div>
     </div>
   `;
 
@@ -1384,16 +1391,16 @@ window.resetChat = function() {
   showResetToast();
 };
 
-function showResetToast() {
+function showResetToast(msg = "Conversation reset. Starting fresh!") {
   const existing = document.getElementById("reset-toast");
   if (existing) existing.remove();
 
   const toast = document.createElement("div");
   toast.id = "reset-toast";
   toast.className = "fixed bottom-20 left-1/2 -translate-x-1/2 bg-slate-900/95 border border-emerald-500/40 text-emerald-400 text-xs px-4 py-2 rounded-xl shadow-2xl flex items-center gap-2 z-50 message-animate";
-  toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> Conversation reset. Starting fresh!`;
+  toast.innerHTML = `<i class="fa-solid fa-circle-check text-emerald-400"></i> ${escapeHTML(msg)}`;
   document.body.appendChild(toast);
-  setTimeout(() => toast.remove(), 2500);
+  setTimeout(() => toast.remove(), 2800);
 }
 
 // Button listener for reset
@@ -1403,3 +1410,171 @@ if (btnClearChat) {
     window.resetChat();
   });
 }
+
+// ==========================================
+// FEEDBACK MODAL CONTROLLER
+// ==========================================
+let currentFeedbackRating = 5;
+let currentFeedbackCategory = "Response Quality";
+
+const ratingDescriptions = {
+  1: "1 Star - Needs Improvement",
+  2: "2 Stars - Fair",
+  3: "3 Stars - Good",
+  4: "4 Stars - Very Good",
+  5: "5 Stars - Outstanding"
+};
+
+function initFeedbackSystem() {
+  const container = document.getElementById("star-rating-container");
+  if (container) {
+    const stars = container.querySelectorAll("i");
+    stars.forEach(star => {
+      star.addEventListener("click", () => {
+        const val = parseInt(star.getAttribute("data-value") || "5", 10);
+        setFeedbackRating(val);
+      });
+    });
+  }
+
+  const tagsContainer = document.getElementById("feedback-tags-container");
+  if (tagsContainer) {
+    const tags = tagsContainer.querySelectorAll(".feedback-tag");
+    tags.forEach(tag => {
+      tag.addEventListener("click", () => {
+        tags.forEach(t => {
+          t.className = "feedback-tag px-2.5 py-1 rounded-lg text-[11px] border border-slate-700 bg-slate-800 text-slate-300 hover:border-emerald-500 transition-all cursor-pointer";
+        });
+        tag.className = "feedback-tag px-2.5 py-1 rounded-lg text-[11px] border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-medium transition-all cursor-pointer";
+        currentFeedbackCategory = tag.getAttribute("data-tag") || "Response Quality";
+      });
+    });
+  }
+}
+
+function setFeedbackRating(val) {
+  currentFeedbackRating = val;
+  const container = document.getElementById("star-rating-container");
+  if (!container) return;
+  const stars = container.querySelectorAll("i");
+  stars.forEach(s => {
+    const sVal = parseInt(s.getAttribute("data-value") || "0", 10);
+    if (sVal <= val) {
+      s.className = "fa-solid fa-star transition-all duration-150 cursor-pointer hover:scale-110 text-amber-400";
+    } else {
+      s.className = "fa-solid fa-star transition-all duration-150 cursor-pointer hover:scale-110 text-slate-700";
+    }
+  });
+  const label = document.getElementById("rating-label");
+  if (label) {
+    label.textContent = ratingDescriptions[val] || `${val} Stars`;
+  }
+}
+
+window.openFeedbackModal = function(category) {
+  const modal = document.getElementById("feedback-modal");
+  const content = document.getElementById("feedback-modal-content");
+  if (!modal || !content) return;
+
+  if (category) {
+    currentFeedbackCategory = category;
+    const tags = document.querySelectorAll(".feedback-tag");
+    tags.forEach(t => {
+      if (t.getAttribute("data-tag") === category) {
+        t.className = "feedback-tag px-2.5 py-1 rounded-lg text-[11px] border border-emerald-500/40 bg-emerald-500/10 text-emerald-400 font-medium transition-all cursor-pointer";
+      } else {
+        t.className = "feedback-tag px-2.5 py-1 rounded-lg text-[11px] border border-slate-700 bg-slate-800 text-slate-300 hover:border-emerald-500 transition-all cursor-pointer";
+      }
+    });
+  }
+
+  const emailInput = document.getElementById("feedback-email-input");
+  if (emailInput && !emailInput.value) {
+    emailInput.value = state.testerEmail || state.lead.email || "";
+  }
+
+  setFeedbackRating(currentFeedbackRating);
+
+  modal.classList.remove("hidden");
+  requestAnimationFrame(() => {
+    modal.classList.remove("opacity-0");
+    modal.classList.add("opacity-100");
+    content.classList.remove("scale-95");
+    content.classList.add("scale-100");
+  });
+};
+
+window.closeFeedbackModal = function() {
+  const modal = document.getElementById("feedback-modal");
+  const content = document.getElementById("feedback-modal-content");
+  if (!modal || !content) return;
+
+  modal.classList.remove("opacity-100");
+  modal.classList.add("opacity-0");
+  content.classList.remove("scale-100");
+  content.classList.add("scale-95");
+
+  setTimeout(() => {
+    modal.classList.add("hidden");
+  }, 200);
+};
+
+window.submitFeedback = async function() {
+  const btn = document.getElementById("btn-submit-feedback");
+  const btnText = document.getElementById("feedback-btn-text");
+  const commentsInput = document.getElementById("feedback-comments");
+  const emailInput = document.getElementById("feedback-email-input");
+
+  const comments = (commentsInput ? commentsInput.value.trim() : "");
+  const email = (emailInput ? emailInput.value.trim() : "") || state.testerEmail || state.lead.email || "anonymous-tester@realestate.ai";
+
+  if (btn) btn.disabled = true;
+  if (btnText) btnText.textContent = "Sending...";
+
+  const feedbackPayload = {
+    action: "feedback_submitted",
+    rating: currentFeedbackRating,
+    ratingText: ratingDescriptions[currentFeedbackRating] || `${currentFeedbackRating} Stars`,
+    category: currentFeedbackCategory,
+    comments: comments || "User rated experience without text comment.",
+    testerEmail: email,
+    sessionId: state.sessionId,
+    timestamp: new Date().toISOString()
+  };
+
+  // 1. Send to n8n Webhook
+  try {
+    await fetch(state.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(feedbackPayload)
+    });
+  } catch (err) {
+    console.warn("n8n feedback dispatch warning:", err);
+  }
+
+  // 2. FormSubmit Fallback
+  try {
+    await fetch(state.fallbackMailerUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "Accept": "application/json" },
+      body: JSON.stringify({
+        _subject: `⭐ PROPERTYAI USER FEEDBACK: ${currentFeedbackRating}/5 Stars (${currentFeedbackCategory})`,
+        _template: "table",
+        _captcha: "false",
+        rating: `${currentFeedbackRating} / 5 Stars`,
+        category: currentFeedbackCategory,
+        comments: comments || "None",
+        user_email: email,
+        session_id: state.sessionId
+      })
+    });
+  } catch (fbErr) {}
+
+  if (btn) btn.disabled = false;
+  if (btnText) btnText.textContent = "Submit Feedback";
+  if (commentsInput) commentsInput.value = "";
+
+  closeFeedbackModal();
+  showResetToast(`🎉 Thank you! Your feedback (${currentFeedbackRating}★) was submitted.`);
+};
