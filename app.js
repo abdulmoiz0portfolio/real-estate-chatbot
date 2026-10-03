@@ -331,6 +331,11 @@ function saveHistory() {
 
 function renderSavedHistory() {
   chatMessages.innerHTML = "";
+  if (!state.chatHistory || state.chatHistory.length === 0) {
+    sendWelcomeMessage();
+    return;
+  }
+
   state.chatHistory.forEach(msg => {
     if (msg.role === "user") {
       const msgEl = document.createElement("div");
@@ -369,6 +374,14 @@ function renderSavedHistory() {
     }
   });
   scrollToBottom();
+
+  // If the last message in history was an unanswered user message, automatically process it so user is never stranded
+  const lastMsg = state.chatHistory[state.chatHistory.length - 1];
+  if (lastMsg && lastMsg.role === "user") {
+    setTimeout(() => {
+      processUserTurn(lastMsg.content);
+    }, 400);
+  }
 }
 
 // Markdown formatting helper with proper valid HTML list wrapping
@@ -838,7 +851,7 @@ async function sendToN8nBot(userText) {
   };
 
   const controller = new AbortController();
-  const timeoutId = setTimeout(() => controller.abort(), 12000);
+  const timeoutId = setTimeout(() => controller.abort(), 18000);
 
   try {
     const response = await fetch(state.webhookUrl, {
