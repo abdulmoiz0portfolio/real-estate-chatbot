@@ -837,6 +837,9 @@ async function sendToN8nBot(userText) {
     timestamp: new Date().toISOString()
   };
 
+  const controller = new AbortController();
+  const timeoutId = setTimeout(() => controller.abort(), 12000);
+
   try {
     const response = await fetch(state.webhookUrl, {
       method: "POST",
@@ -844,8 +847,10 @@ async function sendToN8nBot(userText) {
         "Content-Type": "application/json",
         "Accept": "application/json"
       },
+      signal: controller.signal,
       body: JSON.stringify(payload)
     });
+    clearTimeout(timeoutId);
 
     if (response.ok) {
       const data = await response.json();
@@ -871,6 +876,8 @@ async function sendToN8nBot(userText) {
       };
     }
   } catch (err) {
+    clearTimeout(timeoutId);
+    console.warn("n8n webhook fetch error (falling back seamlessly):", err);
     return { success: false, error: err.message };
   }
 }
@@ -917,11 +924,8 @@ async function processUserTurn(userText) {
     return;
   }
 
-  // 2. If n8n returns 404 (Workflow Inactive / Deactivated) or server offline:
+  // 2. If n8n returns an error, timeout, or server offline:
   if (!botResult.success) {
-    if (botResult.status === 404) {
-      sendBotMessage(`⚠️ **n8n AI Workflow is Inactive (Deactivated)**\n\nThe conversation is routed directly to your n8n AI agent, but the workflow toggle is currently **OFF** in your n8n canvas.\n\n👉 **Please open your n8n dashboard and toggle the workflow to Active (ON)** in the top-right corner to chat with your live Groq AI model.\n\n*(Running local concierge mode while n8n is inactive)*`);
-    }
     processLocalFallback(text);
   }
 }
@@ -1067,7 +1071,7 @@ ${lead.selectedProperty ? `- 🏷️ **Selected Property:** ${lead.selectedPrope
       lead.intent = "Rent / Lease";
     } else if (lower.includes("invest") || lower.includes("roi") || lower.includes("yield")) {
       lead.intent = "High-Yield Investment";
-    } else if (lower.includes("sell") || lower.includes("list")) {
+    } else if (lower.includes("sell") || lower.includes("list") || lower.includes("valuation") || lower.includes("value")) {
       lead.intent = "Sell / List Property";
     }
   }
@@ -1092,6 +1096,12 @@ ${lead.selectedProperty ? `- 🏷️ **Selected Property:** ${lead.selectedPrope
   // 1. Missing Location AND Property Type
   if (!lead.location && !lead.propertyType) {
     lead.waitingFor = "location";
+    if (lead.intent === "Sell / List Property") {
+      let msg = `We would be honored to provide an official market valuation and private listing representation for your property.\n\nWhich **city or neighborhood** is the property located in, and is it a **villa, penthouse, or estate**?`;
+      msg += renderLocationChips();
+      sendBotMessage(msg, true);
+      return;
+    }
     let msg = `That sounds wonderful! We have an exclusive portfolio of verified listings and private off-market opportunities.\n\n**Which city, neighborhood, or area are you looking in**, and what style of property do you have in mind?`;
     msg += renderLocationChips();
     sendBotMessage(msg, true);
@@ -1136,7 +1146,9 @@ ${lead.selectedProperty ? `- 🏷️ **Selected Property:** ${lead.selectedPrope
     lead.waitingFor = "budget";
     const locAck = lead.location ? `in **${lead.location}**` : "";
     const typeAck = lead.propertyType ? `**${lead.propertyType}**` : "luxury property";
-    let msg = `Excellent choices — ${typeAck} ${locAck} has fantastic market dynamics and premium inventory.\n\nWhat is your **estimated price range or target budget** for this property?`;
+    let msg = lead.intent === "Sell / List Property"
+      ? `Noted! A ${typeAck} ${locAck} has strong buyer demand right now.\n\nWhat is your **target selling price or estimated property valuation**?`
+      : `Excellent choices — ${typeAck} ${locAck} has fantastic market dynamics and premium inventory.\n\nWhat is your **estimated price range or target budget** for this property?`;
     msg += renderBudgetChips();
     sendBotMessage(msg, true);
     return;
@@ -1151,7 +1163,9 @@ ${lead.selectedProperty ? `- 🏷️ **Selected Property:** ${lead.selectedPrope
     }
     if (!lead.timeline) {
       lead.waitingFor = "timeline";
-      let msg = `Noted! A budget of **${lead.budget}** offers great options in **${lead.location}**.\n\nWhat is your **ideal purchase or move-in timeline**?`;
+      let msg = lead.intent === "Sell / List Property"
+        ? `Understood! With an estimated valuation around **${lead.budget}**, our listing team can achieve maximum market exposure.\n\nWhat is your **target timeline to list or complete the sale**?`
+        : `Noted! A budget of **${lead.budget}** offers great options in **${lead.location}**.\n\nWhat is your **ideal purchase or move-in timeline**?`;
       msg += renderTimelineChips();
       sendBotMessage(msg, true);
       return;

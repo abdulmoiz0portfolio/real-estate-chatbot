@@ -10,7 +10,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="style.css?v=5.3">
+  <link rel="stylesheet" href="style.css?v=5.4">
 </head>
 <body class="bg-[#070C15] text-slate-100 h-screen h-[100dvh] flex flex-col font-['Plus_Jakarta_Sans',sans-serif] overflow-hidden antialiased selection:bg-emerald-500/30 selection:text-emerald-200 relative">
 
@@ -120,14 +120,14 @@
     </div>
   </header>
 
-  <!-- Main Workspace: Split Layout on Desktop (Automatixes Showcase Left + PropertyAI Live Chat Right) -->
-  <main class="flex-1 min-h-0 w-full lg:max-w-7xl lg:mx-auto px-3.5 sm:px-4 md:px-6 md:py-3.5 flex flex-col lg:flex-row gap-5 lg:gap-6 overflow-hidden relative z-10">
+  <!-- Main Workspace: Split Layout on Desktop (Automatixes Showcase Left + Centered Main Chat) -->
+  <main class="flex-1 min-h-0 w-full max-w-[1440px] mx-auto px-3.5 sm:px-4 md:px-6 md:py-3.5 flex flex-col lg:flex-row lg:justify-center items-stretch gap-6 xl:gap-8 overflow-hidden relative z-10">
 
     <!-- ============================================================== -->
     <!-- DESKTOP LEFT COLUMN: AUTOMATIXES AGENCY MARKETING SHOWCASE     -->
     <!-- (Strictly visible on lg: and above; 100% hidden on mobile)     -->
     <!-- ============================================================== -->
-    <aside class="hidden lg:flex lg:w-[44%] xl:w-[42%] flex-col justify-between h-full rounded-2xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl p-5 xl:p-6 shadow-2xl relative overflow-y-auto custom-scrollbar shrink-0">
+    <aside class="hidden lg:flex w-[360px] xl:w-[390px] flex-col justify-between h-full rounded-2xl border border-slate-800/80 bg-slate-900/60 backdrop-blur-xl p-5 xl:p-6 shadow-2xl relative overflow-y-auto custom-scrollbar shrink-0">
       
       <!-- Top Brand & Positioning -->
       <div class="space-y-4">
@@ -145,9 +145,9 @@
               <p class="text-[11px] text-slate-400 font-medium mt-0.5">Enterprise AI Agents & n8n Systems</p>
             </div>
           </div>
-          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-semibold">
+          <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-emerald-500/10 border border-emerald-500/25 text-emerald-400 text-[10px] font-semibold shrink-0">
             <span class="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span>
-            Production Showcase
+            Showcase
           </span>
         </div>
 
@@ -170,10 +170,10 @@
           <div>
             <div class="text-xs font-bold text-white flex items-center gap-1.5">
               <span>Interactive Live Demo</span>
-              <span class="text-[10px] text-emerald-400 font-medium">(Right Panel 👉)</span>
+              <span class="text-[10px] text-emerald-400 font-medium">(Center Chat 👉)</span>
             </div>
             <p class="text-[11px] text-slate-300 mt-0.5 leading-relaxed">
-              Enter your email in the <strong>Demo Mode</strong> bar on the right to test live qualification and receive instant lead notification reports in your inbox!
+              Enter your email in the <strong>Demo Mode</strong> bar to test live qualification and receive instant lead notification reports in your inbox!
             </p>
           </div>
         </div>
@@ -255,35 +255,36 @@
     </aside>
 
     <!-- ============================================================== -->
-    <!-- RIGHT COLUMN: PROPERTYAI CONCIERGE LIVE CHAT WORKSPACE         -->
+    <!-- CENTER MAIN CHAT: PROPERTYAI CONCIERGE LIVE CHAT WORKSPACE     -->
+    <!-- (Perfect responsive width centered in the desktop viewport)     -->
     <!-- ============================================================== -->
-    <div class="flex-1 min-h-0 flex flex-col h-full md:rounded-2xl md:border md:border-slate-800/80 md:bg-slate-900/50 md:shadow-2xl overflow-hidden relative">
+    <div class="flex-1 min-h-0 flex flex-col h-full max-w-2xl xl:max-w-[700px] md:rounded-2xl md:border md:border-slate-800/80 md:bg-slate-900/50 md:shadow-2xl overflow-hidden relative">
 
-      <!-- Demo Tester Email Bar (Mobile Strip on mobile, wide gradient bar on desktop) -->
-      <div id="demo-tester-banner" class="shrink-0 px-1 py-1.5 md:px-4 md:py-2.5 md:bg-gradient-to-r md:from-emerald-950/60 md:via-slate-900/90 md:to-teal-950/60 md:border-b md:border-emerald-500/20 flex items-center justify-between gap-2 mb-2 md:mb-0 z-20">
+      <!-- Demo Tester Email Bar (Compact, wrap-safe & never overflows Save button) -->
+      <div id="demo-tester-banner" class="shrink-0 px-2.5 py-2 md:px-4 md:py-2.5 md:bg-gradient-to-r md:from-emerald-950/60 md:via-slate-900/90 md:to-teal-950/60 md:border-b md:border-emerald-500/20 flex items-center justify-between gap-2 mb-2 md:mb-0 z-20 overflow-hidden">
         <div class="flex items-center gap-2 shrink-0">
           <!-- Mobile Demo Tag -->
           <span class="md:hidden text-slate-400 text-xs font-semibold px-1">Demo</span>
           <!-- Desktop Badge & Description -->
-          <span class="hidden md:flex px-2.5 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold text-[10px] tracking-wide uppercase items-center gap-1.5 shadow-sm">
-            <i class="fa-solid fa-flask"></i> Demo Test Mode
+          <span class="hidden md:flex px-2 py-0.5 rounded-full bg-emerald-500/20 border border-emerald-500/40 text-emerald-400 font-bold text-[10px] tracking-wide uppercase items-center gap-1.5 shadow-sm shrink-0">
+            <i class="fa-solid fa-flask"></i> Demo
           </span>
-          <span class="hidden md:inline text-slate-300 text-xs font-medium">Receive instant lead notifications to your email:</span>
+          <span class="hidden 2xl:inline text-slate-300 text-xs font-medium shrink-0">Live email alerts:</span>
         </div>
-        <div class="flex items-center gap-1.5 flex-1 md:flex-initial justify-end">
-          <div class="relative w-full md:w-64">
+        <div class="flex items-center gap-1.5 flex-1 max-w-[280px] sm:max-w-[320px] justify-end shrink-0 min-w-0">
+          <div class="relative flex-1 min-w-0">
             <input 
               type="email" 
               id="tester-email-input" 
-              placeholder="Your email for chat summary" 
-              class="w-full bg-[#0F1728]/80 md:bg-slate-950/90 border border-slate-800/90 md:border-slate-700/80 rounded-xl px-3.5 py-2 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-all"
+              placeholder="Your email for alerts" 
+              class="w-full bg-[#0F1728]/80 md:bg-slate-950/90 border border-slate-800/90 md:border-slate-700/80 rounded-xl px-3 py-1.5 text-xs text-slate-100 placeholder:text-slate-500 focus:outline-none focus:border-emerald-500 transition-all truncate"
             />
           </div>
           <button 
             type="button" 
             id="btn-save-tester-email" 
             onclick="saveTesterEmail()" 
-            class="px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer shrink-0"
+            class="px-3.5 py-1.5 rounded-xl bg-emerald-500 hover:bg-emerald-400 text-white font-semibold text-xs shadow-md shadow-emerald-500/20 active:scale-95 transition-all cursor-pointer shrink-0 min-w-[55px]"
             title="Save email for live notifications"
           >
             <span id="tester-btn-text">Save</span>
@@ -432,6 +433,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=5.3"></script>
+  <script src="app.js?v=5.4"></script>
 </body>
 </html>
