@@ -115,8 +115,8 @@ function sendWelcomeMessage() {
       </p>
     </div>
 
-    <!-- 2x2 Bento Action Cards on Mobile, 4-Column on Desktop -->
-    <div class="grid grid-cols-2 md:grid-cols-4 gap-2.5 sm:gap-3.5">
+    <!-- 2x2 Bento Action Cards (Perfect Fit for Mobile & Desktop Split-Pane) -->
+    <div class="grid grid-cols-2 gap-2.5 sm:gap-3">
       <button onclick="askSuggestedQuestion('I am looking to buy a luxury residential home.')" class="bg-[#0F1728]/85 hover:bg-[#131F35] border border-slate-800/90 hover:border-emerald-500/40 rounded-2xl p-4 text-left transition-all duration-200 active:scale-[0.98] group cursor-pointer shadow-sm">
         <i class="fa-solid fa-house text-emerald-400 text-xl mb-3 block group-hover:scale-105 transition-transform"></i>
         <span class="text-xs sm:text-sm font-semibold text-slate-100 group-hover:text-emerald-300 transition-colors block leading-snug">Buy a Luxury Home</span>
