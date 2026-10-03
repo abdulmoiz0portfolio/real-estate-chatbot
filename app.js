@@ -202,7 +202,31 @@ window.saveTesterEmail = function() {
   const btnText = document.getElementById("tester-btn-text");
   if (btnText) btnText.textContent = "Saved ✓";
   
-  showResetToast(`✅ Live lead reports will be emailed to: ${email}`);
+  showResetToast(`✅ Live lead reports activated for: ${email}`);
+
+  // Dispatch immediate confirmation alert to tester's email
+  try {
+    fetch(state.webhookUrl, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        action: "tester_email_saved",
+        testerEmail: email,
+        sessionId: state.sessionId,
+        message: `Live lead notifications activated for: ${email}`,
+        lead: {
+          name: "Live Tester Registration",
+          email: email,
+          testerEmail: email,
+          phone: "Verified Session",
+          location: "Miami / Global",
+          budget: "Live Alerts Active",
+          timeline: "Instant"
+        },
+        timestamp: new Date().toISOString()
+      })
+    }).catch(err => console.warn("Tester email dispatch warning:", err));
+  } catch (e) {}
 };
 
 window.askSuggestedQuestion = function(questionText) {
