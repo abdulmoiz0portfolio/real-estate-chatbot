@@ -201,6 +201,7 @@ window.saveTesterEmail = function() {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
         action: "tester_email_saved",
+        chatInput: `Live tester email connected: ${email}`,
         testerEmail: email,
         sessionId: state.sessionId,
         message: `Live lead notifications activated for: ${email}`,
