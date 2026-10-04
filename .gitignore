@@ -8,3 +8,4 @@ node_modules/
 *.py
 test_abdulsamad.cjs
 scratch/
+test_all_qa_fixes.cjs
