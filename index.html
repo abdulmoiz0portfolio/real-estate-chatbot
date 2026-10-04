@@ -216,8 +216,8 @@
         <!-- Metrics Ribbon -->
         <div class="grid grid-cols-3 gap-2 py-2 px-3 rounded-xl bg-[#0F1728]/90 border border-slate-800 text-center">
           <div>
-            <div class="text-sm font-black text-white tracking-tight">&lt; 800ms</div>
-            <div class="text-[9px] uppercase tracking-wider text-emerald-400 font-semibold">Fast Latency</div>
+            <div class="text-sm font-black text-white tracking-tight">&lt; 2s</div>
+            <div class="text-[9px] uppercase tracking-wider text-emerald-400 font-semibold">Real-Time SLA</div>
           </div>
           <div class="border-x border-slate-800/90">
             <div class="text-sm font-black text-white tracking-tight">100%</div>
@@ -368,8 +368,8 @@
   <iframe name="lead_sink_iframe" id="lead_sink_iframe" style="display:none;"></iframe>
 
   <!-- Interactive Feedback Modal -->
-  <div id="feedback-modal" class="fixed inset-0 z-50 flex items-center justify-center p-4 bg-[#070C15]/85 backdrop-blur-md hidden opacity-0 transition-opacity duration-200">
-    <div class="bg-[#0F1728] border border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative transform scale-95 transition-transform duration-200" id="feedback-modal-content">
+  <div id="feedback-modal" class="fixed inset-0 z-[9999] flex items-center justify-center p-4 bg-[#070C15]/90 backdrop-blur-md hidden opacity-0 transition-opacity duration-200">
+    <div class="bg-[#0F1728] border border-slate-800 rounded-3xl max-w-md w-full p-5 sm:p-6 shadow-2xl relative transform scale-95 transition-transform duration-200 max-h-[90vh] overflow-y-auto custom-scrollbar" id="feedback-modal-content">
       <div class="flex items-center justify-between pb-3 border-b border-slate-800/80">
         <div class="flex items-center gap-2.5">
           <div class="w-9 h-9 rounded-2xl bg-emerald-500 text-white flex items-center justify-center shadow-md shadow-emerald-500/20">
@@ -433,6 +433,6 @@
     </div>
   </div>
 
-  <script src="app.js?v=5.7"></script>
+  <script src="app.js?v=6.0"></script>
 </body>
 </html>
