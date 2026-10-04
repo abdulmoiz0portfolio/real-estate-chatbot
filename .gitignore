@@ -4,3 +4,7 @@ node_modules/
 .env
 .vscode/
 .idea/
+node_modules/
+*.py
+test_abdulsamad.cjs
+scratch/
