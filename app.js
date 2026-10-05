@@ -994,11 +994,11 @@ async function processUserTurn(userText) {
       }
       saveHistory();
 
-      const targetEmail = lead.email || state.testerEmail || "abdulsamadferoz786@gmail.com";
+      const targetEmail = lead.email || state.testerEmail || "";
       const propTitle = booking.property || lead.selectedProperty || "The Grand Panorama — Luxury Home";
       const propAddress = booking.address || `${lead.location || "Miami Metro"} • Prime Waterfront (100 Ocean Drive, Miami Beach, FL)`;
-      const buyerName = lead.name || "Abdul Samad Feroz";
-      const buyerPhone = lead.phone || "+1 (305) 777-9876";
+      const buyerName = lead.name || "Valued Client";
+      const buyerPhone = lead.phone || "Verified Mobile";
 
       // Render Confirmation Artifact Card
       const artifactHtml = `
@@ -1312,7 +1312,7 @@ ${lead.selectedProperty ? `- 🏷️ **Selected Property:** ${lead.selectedPrope
 
 async function dispatchLeadNotification() {
   const lead = state.lead;
-  const targetTester = state.testerEmail || lead.email || "abdulsamadferoz786@gmail.com";
+  const targetTester = state.testerEmail || lead.email || "";
 
   const transcriptText = state.chatHistory.map(m => `[${m.role.toUpperCase()} - ${m.time || ''}]: ${m.content}`).join("\n");
   const executiveSummary = `
@@ -1384,7 +1384,7 @@ Capture Time:     ${new Date().toLocaleString()}
 async function dispatchBookingNotification() {
   const lead = state.lead;
   const booking = state.booking;
-  const targetTester = state.testerEmail || lead.email || "abdulsamadferoz786@gmail.com";
+  const targetTester = state.testerEmail || lead.email || "";
 
   const payload = {
     action: "booking_completed",
@@ -1621,7 +1621,7 @@ window.submitFeedback = async function() {
   const emailInput = document.getElementById("feedback-email-input");
 
   const comments = (commentsInput ? commentsInput.value.trim() : "");
-  const email = (emailInput ? emailInput.value.trim() : "") || state.testerEmail || state.lead.email || "abdulsamadferoz786@gmail.com";
+  const email = (emailInput ? emailInput.value.trim() : "") || state.testerEmail || state.lead.email || "";
 
   if (btn) btn.disabled = true;
   if (btnText) btnText.textContent = "Sending...";
